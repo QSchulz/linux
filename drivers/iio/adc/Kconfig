@@ -384,6 +384,18 @@ config ROCKCHIP_SARADC
 	  To compile this driver as a module, choose M here: the
 	  module will be called rockchip_saradc.
 
+config SUN4I_GPADC
+	tristate "Support for the Allwinner SoCs GPADC"
+	depends on IIO
+	depends on MFD_SUN4I_GPADC
+	help
+	  Say yes here to build support for Allwinner (A10, A13 and A31) SoCs
+	  GPADC. This ADC provides 4 channels which can be used as an ADC or as
+	  a touchscreen input and one channel for thermal sensor.
+
+	  To compile this driver as a module, choose M here: the module will be
+	  called sunxi-gpadc-iio.
+
 config TI_ADC081C
 	tristate "Texas Instruments ADC081C/ADC101C/ADC121C family"
 	depends on I2C
