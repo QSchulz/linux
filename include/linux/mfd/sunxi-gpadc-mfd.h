@@ -1,0 +1,94 @@
+/* Header of ADC MFD core driver for sunxi platforms
+ *
+ * Copyright (c) 2016 Quentin Schulz <quentin.schulz@free-electrons>
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License version 2 as published by the
+ * Free Software Foundation.
+ */
+
+#ifndef __SUNXI_GPADC_MFD__H__
+#define __SUNXI_GPADC_MFD__H__
+
+#define SUNXI_GPADC_TP_CTRL0				0x00
+
+#define SUNXI_GPADC_TP_CTRL0_ADC_FIRST_DLY(x)		((GENMASK(7, 0) & (x)) << 24)
+#define SUNXI_GPADC_TP_CTRL0_ADC_FIRST_DLY_MODE		BIT(23)
+#define SUNXI_GPADC_TP_CTRL0_ADC_CLK_SELECT		BIT(22)
+#define SUNXI_GPADC_TP_CTRL0_ADC_CLK_DIVIDER(x)		((GENMASK(1, 0) & (x)) << 20)
+#define SUNXI_GPADC_TP_CTRL0_FS_DIV(x)			((GENMASK(3, 0) & (x)) << 16)
+#define SUNXI_GPADC_TP_CTRL0_T_ACQ(x)			(GENMASK(15, 0) & (x))
+
+#define SUNXI_GPADC_TP_CTRL1				0x04
+
+#define SUNXI_GPADC_TP_CTRL1_STYLUS_UP_DEBOUNCE(x)	((GENMASK(7, 0) & (x)) << 12)
+#define SUNXI_GPADC_TP_CTRL1_STYLUS_UP_DEBOUNCE_EN	BIT(9)
+#define SUNXI_GPADC_TP_CTRL1_TOUCH_PAN_CALI_EN		BIT(6)
+#define SUNXI_GPADC_TP_CTRL1_TP_DUAL_EN			BIT(5)
+#define SUNXI_GPADC_TP_CTRL1_TP_MODE_EN			BIT(4)
+#define SUNXI_GPADC_TP_CTRL1_TP_ADC_SELECT		BIT(3)
+#define SUNXI_GPADC_TP_CTRL1_ADC_CHAN_SELECT(x)		(GENMASK(2, 0) & (x))
+
+/* TP_CTRL1 bits for sun6i SOCs */
+#define SUNXI_GPADC_TP_CTRL1_SUN6I_TOUCH_PAN_CALI_EN	BIT(7)
+#define SUNXI_GPADC_TP_CTRL1_SUN6I_TP_DUAL_EN		BIT(6)
+#define SUNXI_GPADC_TP_CTRL1_SUN6I_TP_MODE_EN		BIT(5)
+#define SUNXI_GPADC_TP_CTRL1_SUN6I_TP_ADC_SELECT	BIT(4)
+#define SUNXI_GPADC_TP_CTRL1_SUN6I_ADC_CHAN_SELECT(x)	(GENMASK(3, 0) & BIT(x))
+
+#define SUNXI_GPADC_TP_CTRL2				0x08
+
+#define SUNXI_GPADC_TP_CTRL2_TP_SENSITIVE_ADJUST(x)	((GENMASK(3, 0) & (x)) << 28)
+#define SUNXI_GPADC_TP_CTRL2_TP_MODE_SELECT(x)		((GENMASK(1, 0) & (x)) << 26)
+#define SUNXI_GPADC_TP_CTRL2_PRE_MEA_EN			BIT(24)
+#define SUNXI_GPADC_TP_CTRL2_PRE_MEA_THRE_CNT(x)	(GENMASK(23, 0) & (x))
+
+#define SUNXI_GPADC_TP_CTRL3				0x0c
+
+#define SUNXI_GPADC_TP_CTRL3_FILTER_EN			BIT(2)
+#define SUNXI_GPADC_TP_CTRL3_FILTER_TYPE(x)		(GENMASK(1, 0) & (x))
+
+#define SUNXI_GPADC_TP_TPR				0x18
+
+#define SUNXI_GPADC_TP_TPR_TEMP_ENABLE			BIT(16)
+#define SUNXI_GPADC_TP_TPR_TEMP_PERIOD(x)		(GENMASK(15, 0) & (x))
+
+#define SUNXI_GPADC_TP_INT_FIFOC			0x10
+
+#define SUNXI_GPADC_TP_INT_FIFOC_TEMP_IRQ_EN		BIT(18)
+#define SUNXI_GPADC_TP_INT_FIFOC_TP_OVERRUN_IRQ_EN	BIT(17)
+#define SUNXI_GPADC_TP_INT_FIFOC_TP_DATA_IRQ_EN		BIT(16)
+#define SUNXI_GPADC_TP_INT_FIFOC_TP_DATA_XY_CHANGE	BIT(13)
+#define SUNXI_GPADC_TP_INT_FIFOC_TP_FIFO_TRIG_LEVEL(x)	((GENMASK(4, 0) & (x)) << 8)
+#define SUNXI_GPADC_TP_INT_FIFOC_TP_DATA_DRQ_EN		BIT(7)
+#define SUNXI_GPADC_TP_INT_FIFOC_TP_FIFO_FLUSH		BIT(4)
+#define SUNXI_GPADC_TP_INT_FIFOC_TP_UP_IRQ_EN		BIT(1)
+#define SUNXI_GPADC_TP_INT_FIFOC_TP_DOWN_IRQ_EN		BIT(0)
+
+#define SUNXI_GPADC_TP_INT_FIFOS			0x14
+
+#define SUNXI_GPADC_TP_INT_FIFOS_TEMP_DATA_PENDING	BIT(18)
+#define SUNXI_GPADC_TP_INT_FIFOS_FIFO_OVERRUN_PENDING	BIT(17)
+#define SUNXI_GPADC_TP_INT_FIFOS_FIFO_DATA_PENDING	BIT(16)
+#define SUNXI_GPADC_TP_INT_FIFOS_TP_IDLE_FLG		BIT(2)
+#define SUNXI_GPADC_TP_INT_FIFOS_TP_UP_PENDING		BIT(1)
+#define SUNXI_GPADC_TP_INT_FIFOS_TP_DOWN_PENDING	BIT(0)
+
+#define SUNXI_GPADC_TP_CDAT				0x1c
+#define SUNXI_GPADC_TEMP_DATA				0x20
+#define SUNXI_GPADC_TP_DATA				0x24
+
+#define SUNXI_IRQ_FIFO_DATA				0
+#define SUNXI_IRQ_TEMP_DATA				1
+
+/* 10s delay before suspending the IP */
+#define SUNXI_GPADC_AUTOSUSPEND_DELAY			10000
+
+struct sunxi_gpadc_mfd_dev {
+	struct device			*dev;
+	struct regmap			*regmap;
+	struct regmap_irq_chip_data	*regmap_irqc;
+	void __iomem			*regs;
+};
+
+#endif
