@@ -192,7 +192,21 @@ static struct platform_driver __refdata iio_hwmon_driver = {
 	.remove = iio_hwmon_remove,
 };
 
-module_platform_driver(iio_hwmon_driver);
+static struct platform_driver * const drivers[] = {
+	&iio_hwmon_driver,
+};
+
+static int __init iio_hwmon_late_init(void)
+{
+	return platform_register_drivers(drivers, ARRAY_SIZE(drivers));
+}
+late_initcall(iio_hwmon_late_init);
+
+static void __exit iio_hwmon_exit(void)
+{
+	platform_unregister_drivers(drivers, ARRAY_SIZE(drivers));
+}
+module_exit(iio_hwmon_exit);
 
 MODULE_AUTHOR("Jonathan Cameron <jic23@kernel.org>");
 MODULE_DESCRIPTION("IIO to hwmon driver");
