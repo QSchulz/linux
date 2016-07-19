@@ -342,6 +342,7 @@ config SUNXI_ADC
 	tristate "ADC driver for sunxi platforms"
 	depends on IIO
 	depends on MFD_SUNXI_ADC
+	depends on IIO_BUFFER_CB
 	help
 	  Say yes here to build support for Allwinner (A10, A13 and A31) SoCs
 	  ADC. This ADC provides 4 channels which can be used as an ADC or as a
