@@ -20,4 +20,9 @@ struct sunxi_gpadc_mfd_dev {
 	void __iomem			*regs;
 };
 
+struct sunxi_gpadc_buffer {
+	u32				buffer[32];
+	unsigned int			buff_size;
+};
+
 #endif
