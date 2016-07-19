@@ -19,6 +19,8 @@
 
 #define SUNXI_IRQ_FIFO_DATA	0
 #define SUNXI_IRQ_TEMP_DATA	1
+#define SUNXI_IRQ_TP_UP		2
+
 
 static struct resource adc_resources[] = {
 	{
@@ -34,9 +36,19 @@ static struct resource adc_resources[] = {
 	},
 };
 
+static struct resource ts_resources[] = {
+	{
+		.name	= "TP_UP_PENDING",
+		.start	= SUNXI_IRQ_TP_UP,
+		.end	= SUNXI_IRQ_TP_UP,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
 static const struct regmap_irq sunxi_gpadc_mfd_regmap_irq[] = {
 	REGMAP_IRQ_REG(SUNXI_IRQ_FIFO_DATA, 0, BIT(16)),
 	REGMAP_IRQ_REG(SUNXI_IRQ_TEMP_DATA, 0, BIT(18)),
+	REGMAP_IRQ_REG(SUNXI_IRQ_TP_UP, 0, BIT(1)),
 };
 
 static const struct regmap_irq_chip sunxi_gpadc_mfd_regmap_irq_chip = {
