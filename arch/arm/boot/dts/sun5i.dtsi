@@ -655,6 +655,7 @@
 			reg = <0x01c25000 0x100>;
 			interrupts = <29>;
 			#thermal-sensor-cells = <0>;
+			allwinner,ts-attached;
 		};
 
 		uart1: serial@01c28400 {
