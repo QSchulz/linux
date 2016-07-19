@@ -1072,14 +1072,13 @@ config TOUCHSCREEN_STMPE
 config TOUCHSCREEN_SUN4I
 	tristate "Allwinner sun4i resistive touchscreen controller support"
 	depends on ARCH_SUNXI || COMPILE_TEST
-	depends on HWMON
-	depends on THERMAL || !THERMAL_OF
+	depends on SUNXI_ADC
 	help
-	  This selects support for the resistive touchscreen controller
-	  found on Allwinner sunxi SoCs.
+	  This selects support for the resistive touchscreen controller found
+	  on Allwinner SoCs (A10, A13, A31).
 
-	  To compile this driver as a module, choose M here: the
-	  module will be called sun4i-ts.
+	  To compile this driver as a module, choose M here: the module will be
+	  called sunxi-gpadc-ts.
 
 config TOUCHSCREEN_SUR40
 	tristate "Samsung SUR40 (Surface 2.0/PixelSense) touchscreen"
