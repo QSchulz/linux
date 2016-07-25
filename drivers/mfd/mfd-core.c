@@ -175,12 +175,16 @@ static int mfd_add_device(struct device *parent, int id,
 	if (ret < 0)
 		goto fail_res;
 
-	if (parent->of_node && cell->of_compatible) {
-		for_each_child_of_node(parent->of_node, np) {
-			if (of_device_is_compatible(np, cell->of_compatible)) {
-				pdev->dev.of_node = np;
-				break;
+	if (parent->of_node) {
+		if (cell->of_compatible) {
+			for_each_child_of_node(parent->of_node, np) {
+				if (of_device_is_compatible(np, cell->of_compatible)) {
+					pdev->dev.of_node = np;
+					break;
+				}
 			}
+		} else {
+			pdev->dev.of_node = parent->of_node;
 		}
 	}
 
