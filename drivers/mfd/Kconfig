@@ -39,10 +39,10 @@ config MFD_SUN4I_GPADC
 	  This driver will only map the hardware interrupt and registers, you
 	  have to select individual drivers based on this MFD to be able to use
 	  the ADC or the thermal sensor. This will try to probe the ADC driver
-	  sunxi-gpadc-iio and the hwmon driver iio_hwmon.
+	  sun4i-gpadc-iio and the hwmon driver iio_hwmon.
 
 	  To compile this driver as a module, choose M here: the module will be
-	  called sunxi-gpadc-mfd.
+	  called sun4i-gpadc-mfd.
 
 config MFD_AS3711
 	bool "AMS AS3711"

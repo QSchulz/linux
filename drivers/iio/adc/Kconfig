@@ -394,7 +394,7 @@ config SUN4I_GPADC
 	  a touchscreen input and one channel for thermal sensor.
 
 	  To compile this driver as a module, choose M here: the module will be
-	  called sunxi-gpadc-iio.
+	  called sun4i-gpadc-iio.
 
 config TI_ADC081C
 	tristate "Texas Instruments ADC081C/ADC101C/ADC121C family"
