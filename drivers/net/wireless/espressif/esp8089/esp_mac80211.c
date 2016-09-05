@@ -1565,9 +1565,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 #else
 static int esp_op_ampdu_action(struct ieee80211_hw *hw,
                                struct ieee80211_vif *vif,
-                               enum ieee80211_ampdu_mlme_action action,
-                               struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-                               u8 buf_size, bool amsdu)
+                               struct ieee80211_ampdu_params *params)
 #endif
 #endif
 #endif /* NEW_KERNEL && KERNEL_35 */
@@ -1575,17 +1573,17 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
         int ret = -EOPNOTSUPP;
         struct esp_pub *epub = (struct esp_pub *)hw->priv;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28))
-        struct esp_node * node = (struct esp_node *)sta->drv_priv;
+        struct esp_node * node = (struct esp_node *)params->sta->drv_priv;
 #else
         struct esp_node * node = esp_get_node_by_addr(epub, addr);
 #endif
-        struct esp_tx_tid * tid_info = &node->tid[tid];
+        struct esp_tx_tid * tid_info = &node->tid[params->tid];
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39))
 	u8 buf_size = 64;
 #endif
 
         ESP_IEEE80211_DBG(ESP_DBG_OP, "%s enter \n", __func__);
-        switch(action) {
+        switch(params->action) {
         case IEEE80211_AMPDU_TX_START:
                 if (mod_support_no_txampdu() ||
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
@@ -1597,7 +1595,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 #endif
 			||
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28))
-                        !sta->ht_cap.ht_supported
+                        !params->sta->ht_cap.ht_supported
 #else
                         !node->ht_info.ht_supported
 #endif
@@ -1610,12 +1608,12 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 28))
                 ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s TX START, addr:%pM,tid:%u\n", __func__, addr, tid);
 #else
-                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s TX START, addr:%pM,tid:%u,state:%d\n", __func__, sta->addr, tid, tid_info->state);
+                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s TX START, addr:%pM,tid:%u,state:%d\n", __func__, params->sta->addr, params->tid, tid_info->state);
 #endif
                 spin_lock_bh(&epub->tx_ampdu_lock);
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28))                
                 ESSERT(tid_info->state == ESP_TID_STATE_TRIGGER);
-                *ssn = tid_info->ssn;
+                params->ssn = tid_info->ssn;
                 tid_info->state = ESP_TID_STATE_PROGRESS;
 #endif
 
@@ -1624,7 +1622,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 #elif (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33))
                 ieee80211_start_tx_ba_cb_irqsafe(hw, sta->addr, tid);
 #else
-                ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+                ieee80211_start_tx_ba_cb_irqsafe(vif, params->sta->addr, params->tid);
 #endif
                 spin_unlock_bh(&epub->tx_ampdu_lock);
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29))
@@ -1659,7 +1657,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 28))
                 ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s TX STOP, addr:%pM,tid:%u\n", __func__, addr, tid);
 #else
-                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s TX STOP, addr:%pM,tid:%u,state:%d\n", __func__, sta->addr, tid, tid_info->state);
+                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s TX STOP, addr:%pM,tid:%u,state:%d\n", __func__, params->sta->addr, params->tid, tid_info->state);
 #endif
                 spin_lock_bh(&epub->tx_ampdu_lock);
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28))
@@ -1673,13 +1671,13 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 #elif (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33))
                 ieee80211_stop_tx_ba_cb_irqsafe(hw, sta->addr, tid);
 #else
-                ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+                ieee80211_stop_tx_ba_cb_irqsafe(vif, params->sta->addr, params->tid);
 #endif
                 spin_unlock_bh(&epub->tx_ampdu_lock);
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 28))
                 ret = sip_send_ampdu_action(epub, SIP_AMPDU_TX_STOP, addr, tid, node->ifidx, 0);
 #else
-                ret = sip_send_ampdu_action(epub, SIP_AMPDU_TX_STOP, sta->addr, tid, node->ifidx, 0);
+                ret = sip_send_ampdu_action(epub, SIP_AMPDU_TX_STOP, params->sta->addr, params->tid, node->ifidx, 0);
 #endif
                 break;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
@@ -1691,7 +1689,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
                 else
                         tid_info->state = ESP_TID_STATE_INIT;
 #endif
-                ret = sip_send_ampdu_action(epub, SIP_AMPDU_TX_STOP, sta->addr, tid, node->ifidx, 0);
+                ret = sip_send_ampdu_action(epub, SIP_AMPDU_TX_STOP, params->sta->addr, params->tid, node->ifidx, 0);
 		        break;
 #endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29))
@@ -1700,7 +1698,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 #else
         case IEEE80211_AMPDU_TX_RESUME:
 #endif
-                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s TX OPERATION, addr:%pM,tid:%u,state:%d\n", __func__, sta->addr, tid, tid_info->state);
+                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s TX OPERATION, addr:%pM,tid:%u,state:%d\n", __func__, params->sta->addr, params->tid, tid_info->state);
                 spin_lock_bh(&epub->tx_ampdu_lock);
 		
                 if (tid_info->state != ESP_TID_STATE_PROGRESS) {
@@ -1715,7 +1713,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 			
                 tid_info->state = ESP_TID_STATE_OPERATIONAL;
                 spin_unlock_bh(&epub->tx_ampdu_lock);
-                ret = sip_send_ampdu_action(epub, SIP_AMPDU_TX_OPERATIONAL, sta->addr, tid, node->ifidx, buf_size);
+                ret = sip_send_ampdu_action(epub, SIP_AMPDU_TX_OPERATIONAL, params->sta->addr, params->tid, node->ifidx, params->buf_size);
                 break;
 #endif
         case IEEE80211_AMPDU_RX_START:
@@ -1729,7 +1727,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 #endif
 			||
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28))
-                        !sta->ht_cap.ht_supported
+                        !params->sta->ht_cap.ht_supported
 #else
                         !node->ht_info.ht_supported
 #endif
@@ -1753,8 +1751,8 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
                 ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s RX START %pM tid %u %u\n", __func__, addr, tid, *ssn);
                 ret = sip_send_ampdu_action(epub, SIP_AMPDU_RX_START, addr, tid, *ssn, 64);
 #else
-                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s RX START %pM tid %u %u\n", __func__, sta->addr, tid, *ssn);
-                ret = sip_send_ampdu_action(epub, SIP_AMPDU_RX_START, sta->addr, tid, *ssn, 64);
+                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s RX START %pM tid %u %u\n", __func__, params->sta->addr, params->tid, params->ssn);
+                ret = sip_send_ampdu_action(epub, SIP_AMPDU_RX_START, params->sta->addr, params->tid, params->ssn, 64);
 #endif
                 break;
         case IEEE80211_AMPDU_RX_STOP:
@@ -1762,8 +1760,8 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
                 ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s RX STOP %pM tid %u\n", __func__, addr, tid);
                 ret = sip_send_ampdu_action(epub, SIP_AMPDU_RX_STOP, addr, tid, 0, 0);
 #else
-                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s RX STOP %pM tid %u\n", __func__, sta->addr, tid);
-                ret = sip_send_ampdu_action(epub, SIP_AMPDU_RX_STOP, sta->addr, tid, 0, 0);
+                ESP_IEEE80211_DBG(ESP_DBG_ERROR, "%s RX STOP %pM tid %u\n", __func__, params->sta->addr, params->tid);
+                ret = sip_send_ampdu_action(epub, SIP_AMPDU_RX_STOP, params->sta->addr, params->tid, 0, 0);
 #endif
                 break;
         default:
