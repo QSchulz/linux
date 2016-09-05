@@ -12,13 +12,8 @@
 #include <linux/firmware.h>
 
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
 #define GET_INODE_FROM_FILEP(filp) \
     (filp)->f_path.dentry->d_inode
-#else
-#define GET_INODE_FROM_FILEP(filp) \
-    (filp)->f_dentry->d_inode
-#endif
 
 #define E_ROUND_UP(x, y)  ((((x) + ((y) - 1)) / (y)) * (y))
 

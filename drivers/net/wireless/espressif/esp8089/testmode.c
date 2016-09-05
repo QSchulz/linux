@@ -28,9 +28,7 @@
 #include "testmode.h"
 #include "esp_path.h"
 #include "esp_file.h"
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
     #include <net/regulatory.h>
-#endif
 
 static int queue_flag = 0;
 
@@ -88,15 +86,11 @@ static void sip_send_test_cmd(struct esp_sip *sip, struct sk_buff *skb)
 	else
         	skb_queue_head(&sip->epub->txq, skb);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
         if(sif_get_ate_config() == 0){
             ieee80211_queue_work(sip->epub->hw, &sip->epub->tx_work);
         } else {
             queue_work(sip->epub->esp_wkq, &sip->epub->tx_work);
         } 
-#else
-        queue_work(sip->epub->esp_wkq, &sip->epub->tx_work);
-#endif
 
 }
 
@@ -110,19 +104,11 @@ static int esp_test_cmd_reply(struct genl_info *info, u32 cmd_type, char *reply_
         if (skb == NULL)
                 goto out;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
         hdr = genlmsg_put(skb,  info->snd_portid, info->snd_seq, &test_genl_family, 0, cmd_type);
-#else
-        hdr = genlmsg_put(skb,  info->snd_pid, info->snd_seq, &test_genl_family, 0, cmd_type);
-#endif
         if (hdr == NULL)
                 goto nla_put_failure;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0))
         nla_put_string(skb, TEST_ATTR_STR, reply_info);
-#else
-        NLA_PUT_STRING(skb, TEST_ATTR_STR, reply_info);
-#endif
         genlmsg_end(skb, hdr);
         genlmsg_reply(skb, info);
         return 0;
@@ -143,15 +129,9 @@ static int esp_test_echo(struct sk_buff *skb_2,
         if (info == NULL)
                 goto out;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
         connected_nl = info->snd_portid;
 	printk(KERN_DEBUG "esp_sdio: received a echo, "
                "from portid %d\n", info->snd_portid);
-#else
-        connected_nl = info->snd_pid;
-        esp_dbg(ESP_DBG_ERROR, "esp_sdio: received a echo, "
-               "from pid %d\n", info->snd_pid);
-#endif
 	sip_debug_show(SIP);
 	
         /*get echo info*/
@@ -182,20 +162,11 @@ static int esp_test_sdiospeed(struct sk_buff *skb_2,
         if (info == NULL)
                 goto out;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
         connected_nl = info->snd_portid;
-#else
-        connected_nl = info->snd_pid;
-#endif
         /*get echo info*/
         speed_info = nla_data(info->attrs[TEST_ATTR_STR]);
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
         esp_dbg(ESP_DBG_ERROR, "esp_sdio: received a sdio speed %s, "
                "from portid %d\n", speed_info, info->snd_portid);
-#else
-        esp_dbg(ESP_DBG_ERROR, "esp_sdio: received a sdio speed %s, "
-               "from pid %d\n", speed_info, info->snd_pid);
-#endif
         if (!strcmp(speed_info, "high")) {
                 sif_platform_target_speed(1);
         } else if (!strcmp(speed_info, "low")) {
@@ -241,11 +212,7 @@ static int esp_test_ate(struct sk_buff *skb_2,
 
 
 	ate_done_data = &complete;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
         connected_nl = info->snd_portid;
-#else
-        connected_nl = info->snd_pid;
-#endif
 
         //esp_dbg(ESP_DBG_ERROR, "esp_sdio: received a ate cmd, "
         //       "from pid %d\n", info->snd_pid);
@@ -441,12 +408,7 @@ static int esp_test_sdiotest(struct sk_buff *skb_2,
 			if ((sdioTest.mode >= 3)&&(sdioTest.mode <= 7)) { // write mode, fill the test buf
                                 data_mask = (sdioTest.mode == 3)? 0xffffffff : (0x11111111<<(sdioTest.mode-4));
 				for (i = 0; i<SDIO_BUF_SIZE/ 4; i++) {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
-
 					*(u32 *)&sdiotest_buf[i*4] = get_random_int() & data_mask;
-#else
-					*(u32 *)&sdiotest_buf[i*4] = random32() & data_mask;
-#endif
 				}
 			}
 			esp_dbg(ESP_DBG_ERROR, "%s mode %d \n", __func__, sdioTest.mode);
@@ -675,11 +637,7 @@ static int sip_send_tx_frame(struct esp_sip *sip, u32 packet_len)
 
 		if(sif_get_ate_config() == 0){
 			sip_tx_data_pkt_enqueue(sip->epub, skb);
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
         	ieee80211_queue_work(sip->epub->hw, &sip->epub->tx_work);
-#else
-        	queue_work(sip->epub->esp_wkq, &sip->epub->tx_work);
-#endif
         } else {
         	skb_queue_tail(&sip->epub->txq, skb);
             queue_work(sip->epub->esp_wkq, &sip->epub->tx_work);
@@ -906,11 +864,7 @@ static int esp_test_netlink_notify(struct notifier_block *nb,
         if (state != NETLINK_URELEASE)
                 return NOTIFY_DONE;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
         if (notify->portid == connected_nl) {
-#else
-        if (notify->pid == connected_nl) {
-#endif
                 esp_dbg(ESP_DBG_ERROR, "esp_sdio: user released netlink"
                        " socket \n");
                 connected_nl = 0;
@@ -922,55 +876,6 @@ static int esp_test_netlink_notify(struct notifier_block *nb,
 static struct notifier_block test_netlink_notifier = {
         .notifier_call = esp_test_netlink_notify,
 };
-
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31))
-/**
- * copy from net/netlink/genetlink.c(linux kernel 2.6.32)
- *
- * genl_register_family_with_ops - register a generic netlink family
- * @family: generic netlink family
- * @ops: operations to be registered
- * @n_ops: number of elements to register
- * 
- * Registers the specified family and operations from the specified table.
- * Only one family may be registered with the same family name or identifier.
- * 
- * The family id may equal GENL_ID_GENERATE causing an unique id to
- * be automatically generated and assigned.
- * 
- * Either a doit or dumpit callback must be specified for every registered
- * operation or the function will fail. Only one operation structure per
- * command identifier may be registered.
- * 
- * See include/net/genetlink.h for more documenation on the operations
- * structure.
- * 
- * This is equivalent to calling genl_register_family() followed by
- * genl_register_ops() for every operation entry in the table taking
- * care to unregister the family on error path.
- * 
- * Return 0 on success or a negative error code.
- */
-int genl_register_family_with_ops(struct genl_family *family,
-        struct genl_ops *ops, size_t n_ops)
-{
-    int err, i;
-
-    err = genl_register_family(family);
-    if (err)
-        return err;
-
-    for (i = 0; i < n_ops; ++i, ++ops) {
-        err = genl_register_ops(family, ops);
-        if (err)
-            goto err_out;
-    }
-    return 0;
-err_out:
-    genl_unregister_family(family);
-    return err;
-}
-#endif
 
 int test_init_netlink(struct esp_sip *sip)
 {
