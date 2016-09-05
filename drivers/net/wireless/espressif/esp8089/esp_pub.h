@@ -52,7 +52,7 @@ struct esp_node {
 #else
 	u8 addr[ETH_ALEN];
 	u16 aid;
-	u64 supp_rates[IEEE80211_NUM_BANDS];
+	u64 supp_rates[NUM_NL80211_BANDS];
 	struct ieee80211_ht_info ht_info;
 #endif
 	u8 ifidx;
@@ -97,7 +97,7 @@ typedef struct esp_wl {
 	atomic_t tkip_key_set;
 
         /* so far only 2G band */
-        struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
+        struct ieee80211_supported_band sbands[NUM_NL80211_BANDS];
 
         unsigned long flags;
         atomic_t off;

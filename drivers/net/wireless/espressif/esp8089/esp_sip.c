@@ -1607,7 +1607,7 @@ static int sip_parse_mac_rx_info(struct esp_sip *sip, struct esp_mac_rx_ctrl * m
 #undef ESP_RSSI_MIN_RSSI
 #endif /* !NEW_KERNEL && KERNEL_35*/
         rx_status->antenna = 0;  /* one antenna for now */
-        rx_status->band = IEEE80211_BAND_2GHZ;
+        rx_status->band = NL80211_BAND_2GHZ;
         rx_status->flag = RX_FLAG_DECRYPTED | RX_FLAG_MMIC_STRIPPED;
         if (mac_ctrl->sig_mode) {
             // 2.6.27 has RX_FLAG_RADIOTAP in enum mac80211_rx_flags in include/net/mac80211.h
