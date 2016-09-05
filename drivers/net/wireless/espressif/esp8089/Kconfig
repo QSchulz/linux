@@ -1,0 +1,14 @@
+#
+# Espressif ESP8089 wireless driver
+#
+
+config ESP8089
+	tristate "Espressif ESP8089 Network Connection"
+	depends on CFG80211
+	select WIRELESS_EXT
+	select WEXT_SPY
+	select WEXT_PRIV
+	select FW_LOADER
+	select LIB80211
+	---help---
+	 plop
