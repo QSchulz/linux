@@ -374,17 +374,12 @@ static bool sip_rx_pkt_process(struct esp_sip * sip, struct sk_buff *skb)
 				goto _move_on;
 
 			if (likely(atomic_read(&sip->epub->wl.off) == 0)) {
-#ifndef RX_SENDUP_SYNC
-				skb_queue_tail(&sip->epub->rxq, rskb);
-				trigger_rxq = true;
-#else
 #ifdef RX_CHECKSUM_TEST
 				esp_rx_checksum_test(rskb);
 #endif
 				local_bh_disable();
 				ieee80211_rx(sip->epub->hw, rskb);
 				local_bh_enable();
-#endif /* RX_SENDUP_SYNC */
 			} else {
 				/* still need go thro parsing as skb_pull should invoke */
 				kfree_skb(rskb);
@@ -444,17 +439,12 @@ static bool sip_rx_pkt_process(struct esp_sip * sip, struct sk_buff *skb)
 							frame_head[1] &= ~0x80;
 							frame_buf_ttl = 3;
 						}
-#ifndef RX_SENDUP_SYNC
-						skb_queue_tail(&sip->epub->rxq, rskb);
-						trigger_rxq = true;
-#else
 #ifdef RX_CHECKSUM_TEST
 						esp_rx_checksum_test(rskb);
 #endif
 						local_bh_disable();
 						ieee80211_rx(sip->epub->hw, rskb);
 						local_bh_enable();
-#endif /* RX_SENDUP_SYNC */
 
 					} else {
 						kfree_skb(rskb);
@@ -547,11 +537,6 @@ static void _sip_rxq_process(struct esp_sip *sip)
                 if (sip_rx_pkt_process(sip, skb))
                         sendup = true;
         }
-#ifndef RX_SENDUP_SYNC
-        if (sendup) {
-                queue_work(sip->epub->esp_wkq, &sip->epub->sendup_work);
-        }
-#endif /* !RX_SENDUP_SYNC */
 
         /* probably tx_credit is updated, try txq */
         sip_trigger_txq_process(sip);
