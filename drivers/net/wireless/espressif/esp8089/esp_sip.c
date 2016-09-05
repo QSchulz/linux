@@ -52,7 +52,6 @@ struct esp_mac_prefix esp_mac_prefix_table[] = {
 
 #define TID_TO_AC(_tid) ((_tid)== 0||((_tid)==3)?WME_AC_BE:((_tid)<3)?WME_AC_BK:((_tid)<6)?WME_AC_VI:WME_AC_VO)
 
-#ifdef SIP_DEBUG
 #define esp_sip_dbg esp_dbg
 struct sip_trace {
         u32 tx_data;
@@ -72,17 +71,6 @@ static struct sip_trace str;
 #define STRACE_TX_OUT_OF_CREDIT_INC() (str.tx_out_of_credit++)
 #define STRACE_TX_ONE_SHOT_INC() (str.tx_one_shot_overflow++)
 #define STRACE_SHOW(sip)
-#else
-#define esp_sip_dbg(...)
-#define STRACE_TX_DATA_INC()
-#define STRACE_TX_CMD_INC()
-#define STRACE_RX_DATA_INC()
-#define STRACE_RX_EVENT_INC()
-#define STRACE_RX_TXSTATUS_INC()
-#define STRACE_TX_OUT_OF_CREDIT_INC()
-#define STRACE_TX_ONE_SHOT_INC()
-#define STRACE_SHOW(sip)
-#endif /* SIP_DEBUG */
 
 #define SIP_STOP_QUEUE_THRESHOLD 48
 #define SIP_RESUME_QUEUE_THRESHOLD  12
