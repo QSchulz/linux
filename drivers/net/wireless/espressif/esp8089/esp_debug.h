@@ -56,23 +56,10 @@ extern unsigned int esp_msg_level;
 extern bool log_off;
 #endif /* ESP_ANDROID_LOGGER */
 
-#ifdef ESP_ANDROID_LOGGER
-#include "esp_file.h"
-#define esp_dbg(mask, fmt, args...) do {                  \
-        if (esp_msg_level & mask)   			  \
-	{						  \
-		if (log_off)      		          \
-			printk(fmt, ##args);              \
-		else 					              \
-            		logger_write(4, "esp_wifi", fmt, ##args);     \
-	}							      \
-    } while (0)
-#else
 #define esp_dbg(mask, fmt, args...) do {                  \
         if (esp_msg_level & mask)                         \
             printk(fmt, ##args);                          \
     } while (0)
-#endif /* ESP_ANDROID_LOGGER */
 
 void show_buf(u8 *buf, u32 len);
 

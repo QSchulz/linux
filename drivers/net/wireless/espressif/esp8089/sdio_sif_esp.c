@@ -45,10 +45,6 @@ static struct semaphore esp_powerup_sem;
 static enum esp_sdio_state sif_sdio_state;
 struct esp_sdio_ctrl *sif_sctrl = NULL;
 
-#ifdef ESP_ANDROID_LOGGER
-bool log_off = false;
-#endif /* ESP_ANDROID_LOGGER */
-
 static int esdio_power_off(struct esp_sdio_ctrl *sctrl);
 static int esdio_power_on(struct esp_sdio_ctrl *sctrl);
 

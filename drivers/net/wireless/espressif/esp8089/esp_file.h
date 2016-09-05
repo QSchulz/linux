@@ -42,13 +42,4 @@ struct esp_init_table_elem {
 int request_init_conf(void);
 void fix_init_data(u8 *init_data_buf, int buf_size);
 
-
-#ifdef ESP_ANDROID_LOGGER
-extern int logger_write( const unsigned char prio,
-                         const char __kernel * const tag,
-                         const char __kernel * const fmt,
-                         ...);
-
-#endif
-
 #endif /* _ESP_FILE_H_ */

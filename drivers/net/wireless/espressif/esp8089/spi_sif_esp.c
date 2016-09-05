@@ -111,10 +111,6 @@ static enum esp_sdio_state sif_sdio_state;
 struct esp_spi_ctrl *sif_sctrl = NULL;
 static struct esp_spi_resp spi_resp;
 
-#ifdef ESP_ANDROID_LOGGER
-bool log_off = false;
-#endif /* ESP_ANDROID_LOGGER */
-
 #ifdef REQUEST_RTC_IRQ
 extern int request_rtc_irq(void);
 #endif

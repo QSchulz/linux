@@ -77,9 +77,6 @@ int esp_pub_init_all(struct esp_pub *epub)
 
 		esp_dump_var("esp_msg_level", NULL, &esp_msg_level, ESP_U32);
 
-#ifdef ESP_ANDROID_LOGGER
-		esp_dump_var("log_off", NULL, &log_off, ESP_U32);
-#endif /* ESP_ANDROID_LOGGER */
 	} else {
 		atomic_set(&epub->sip->state, SIP_PREPARE_BOOT);
 		atomic_set(&epub->sip->tx_credits, 0);
