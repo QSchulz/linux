@@ -6,7 +6,6 @@
  *    - sync/async DMA/PIO read/write
  *
  */
-#ifdef ESP_USE_SDIO
 #include <linux/mmc/card.h>
 #include <linux/mmc/mmc.h>
 #include <linux/mmc/core.h>
@@ -908,4 +907,3 @@ static void  /*__exit*/ esp_sdio_exit(void)
 MODULE_AUTHOR("Espressif System");
 MODULE_DESCRIPTION("Driver for SDIO interconnected eagle low-power WLAN devices");
 MODULE_LICENSE("GPL");
-#endif /* ESP_USE_SDIO */
