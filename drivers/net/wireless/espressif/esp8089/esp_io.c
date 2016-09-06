@@ -10,10 +10,6 @@
 #include "slc_host_register.h"
 #include "esp_debug.h"
 
-#ifdef SIF_DEBUG_DSR_DUMP_REG
-static void dump_slc_regs(struct slc_host_regs *regs);
-#endif /* SIF_DEBUG_DSR_DUMP_REG */
-
 int esp_common_read(struct esp_pub *epub, u8 *buf, u32 len, int sync, bool noround)
 {
 	if (sync) {
@@ -511,9 +507,6 @@ void sif_dsr(struct sdio_func *func)
                         esp_dbg(ESP_DBG_TRACE, "%s bogus_intr_cnt %d\n", __func__, ++bogus_intr_cnt);
                 }
 
-#ifdef SIF_DEBUG_DSR_DUMP_REG
-                dump_slc_regs(regs);
-#endif /* SIF_DEBUG_DUMP_DSR */
 
         } while (0);
 
@@ -551,26 +544,6 @@ void sif_disable_target_interrupt(struct esp_pub *epub)
 _exit:
 	return;
 }
-
-#ifdef SIF_DEBUG_DSR_DUMP_REG
-static void dump_slc_regs(struct slc_host_regs *regs) 
-{
-        esp_dbg(ESP_DBG_TRACE, "\n\n ------- %s --------------\n", __func__);
-
-        esp_dbg(ESP_DBG_TRACE, " \
-                        intr_raw 0x%08X \t \n  \
-                        state_w0 0x%08X \t state_w1 0x%08X \n  \
-                        config_w0 0x%08X \t config_w1 0x%08X \n \
-                        intr_status 0x%08X \t config_w2 0x%08X \n \
-                        config_w3 0x%08X \t config_w4 0x%08X \n \
-                        token_wdata 0x%08X \t intr_clear 0x%08X \n \
-                        intr_enable 0x%08X \n\n", regs->intr_raw, \
-                        regs->state_w0, regs->state_w1, regs->config_w0, regs->config_w1, \
-                        regs->intr_status, \
-                        regs->config_w2, regs->config_w3, regs->config_w4, regs->token_wdata, \
-                        regs->intr_clear, regs->intr_enable);
-}
-#endif /* SIF_DEBUG_DSR_DUMP_REG */
 
 static int bt_config = 0;
 void sif_record_bt_config(int value)
