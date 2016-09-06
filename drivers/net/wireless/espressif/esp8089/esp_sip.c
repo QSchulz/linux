@@ -114,35 +114,11 @@ static void sip_tx_status_report(struct esp_sip *sip, struct sk_buff *skb, struc
 static bool check_ac_tid(u8 *pkt, u8 ac, u8 tid)
 {
         struct ieee80211_hdr * wh = (struct ieee80211_hdr *)pkt;
-#ifdef TID_DEBUG
-        u16 real_tid = 0;
-#endif //TID_DEBUG
 
         if (ieee80211_is_data_qos(wh->frame_control)) {
-#ifdef TID_DEBUG
-		real_tid = *ieee80211_get_qos_ctl(wh) & IEEE80211_QOS_CTL_TID_MASK;
-
-                esp_sip_dbg(ESP_SHOW, "ac:%u, tid:%u, tid in pkt:%u\n", ac, tid, real_tid);
-                if (tid != real_tid) {
-                        esp_sip_dbg(ESP_DBG_ERROR, "111 ac:%u, tid:%u, tid in pkt:%u\n", ac, tid, real_tid);
-                }
-                if (TID_TO_AC(tid) != ac) {
-                        esp_sip_dbg(ESP_DBG_ERROR, "222 ac:%u, tid:%u, tid in pkt:%u\n", ac, tid, real_tid);
-                }
-
-#endif /* TID_DEBUG*/
         } else if (ieee80211_is_mgmt(wh->frame_control)) {
-#ifdef TID_DEBUG
-                esp_sip_dbg(ESP_SHOW, "ac:%u, tid:%u\n", ac, tid);
-                if (tid != 7 || ac != WME_AC_VO) {
-                        esp_sip_dbg(ESP_DBG_ERROR, "333 ac:%u, tid:%u\n", ac, tid);
-                }
-#endif /* TID_DEBUG*/
         } else {
                 if (ieee80211_is_ctl(wh->frame_control)) {
-#ifdef TID_DEBUG
-                        esp_sip_dbg(ESP_SHOW, "%s is ctrl pkt fc 0x%04x ac:%u, tid:%u, tid in pkt:%u\n", __func__, wh->frame_control, ac, tid, real_tid);
-#endif /* TID_DEBUG*/
                 } else {
                         if (tid != 0 || ac != WME_AC_BE) {
                                 //show_buf(pkt, 24);
