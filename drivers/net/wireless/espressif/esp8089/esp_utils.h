@@ -6,11 +6,6 @@
 #define _ESP_UTILS_H_
 
 #include "linux/types.h"
-#include <linux/version.h>
-
-#ifndef BIT
-#define BIT(x) (0x1 << (x))
-#endif
 
 u32 esp_ieee2mhz(u8 chan);
 

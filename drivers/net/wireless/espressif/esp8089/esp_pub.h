@@ -13,7 +13,6 @@
 #include <linux/sched.h>
 #include <net/mac80211.h>
 #include <net/cfg80211.h>
-#include <linux/version.h>
 #include "sip2_common.h"
 
 enum esp_sdio_state{

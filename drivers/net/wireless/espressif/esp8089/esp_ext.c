@@ -12,7 +12,6 @@
 #include <net/cfg80211.h>
 #include <linux/skbuff.h>
 #include <linux/bitops.h>
-#include <linux/version.h>
 #include <linux/mmc/card.h>
 #include <linux/mmc/mmc.h>
 #include <linux/mmc/host.h>

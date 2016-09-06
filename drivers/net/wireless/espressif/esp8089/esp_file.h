@@ -8,7 +8,6 @@
 #ifndef _ESP_FILE_H_
 #define _ESP_FILE_H_
 
-#include <linux/version.h>
 #include <linux/firmware.h>
 
 

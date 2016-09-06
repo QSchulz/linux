@@ -11,7 +11,6 @@
 #include <linux/slab.h>
 #include <net/cfg80211.h>
 #include <net/mac80211.h>
-#include <linux/version.h>
 #include <net/regulatory.h>
 #include "esp_pub.h"
 #include "esp_sip.h"

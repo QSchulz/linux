@@ -8,7 +8,6 @@
 #include <linux/fs.h>
 #include <linux/vmalloc.h>
 #include <linux/kernel.h>
-#include <linux/version.h>
 #include <linux/moduleparam.h>
 #include <linux/firmware.h>
 #include <linux/netdevice.h>
