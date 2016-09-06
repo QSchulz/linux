@@ -32,11 +32,6 @@
 static int __init esp_spi_init(void);
 static void __exit esp_spi_exit(void);
 
-#ifdef ESP_PREALLOC
-extern u8 *esp_get_lspi_buf(void);
-extern void esp_put_lspi_buf(u8 **p);
-#endif
-
 #define SPI_BLOCK_SIZE              (512)
 
 #define MAX_BUF_SIZE        (48*1024)
@@ -1883,20 +1878,13 @@ void sif_disable_irq(struct esp_pub *epub)
 
 int esp_setup_spi(struct spi_device *spi)
 {
-#ifndef ESP_PREALLOC
 	int retry = 10;
-#endif
 	/**** alloc buffer for spi io */
 	if (sif_sdio_state == ESP_SDIO_STATE_FIRST_INIT) {
-#ifdef ESP_PREALLOC
-		if ((buf_addr = esp_get_lspi_buf()) == NULL)
-			goto _err_buf_addr;
-#else
 		while ((buf_addr = (unsigned char *)kmalloc (MAX_BUF_SIZE, GFP_KERNEL)) == NULL) {
 				if (--retry < 0)
 					goto _err_buf_addr;
 		}
-#endif
         	if ((check_buf = (unsigned char *)kmalloc (256, GFP_KERNEL)) == NULL)
 					goto _err_check_buf;
 
@@ -1935,11 +1923,7 @@ _err_ff_buf:
 	}
 _err_check_buf:
 	if (buf_addr) {
-#ifdef ESP_PREALLOC
-		esp_put_lspi_buf(&buf_addr);
-#else
 		kfree(buf_addr);
-#endif
 		buf_addr = NULL;
 	}
 _err_buf_addr:
@@ -2066,11 +2050,7 @@ _err_last:
         kfree(sctrl);
 _err_spi:
 	if (buf_addr) {
-#ifdef ESP_PREALLOC
-		esp_put_lspi_buf(&buf_addr);
-#else
 		kfree(buf_addr);
-#endif
 		buf_addr = NULL;
 		tx_cmd = NULL;
 		rx_cmd = NULL;
@@ -2145,11 +2125,7 @@ static int esp_spi_remove(struct spi_device *spi)
 			kfree(sctrl);
 
 			if (buf_addr) {
-#ifdef ESP_PREALLOC
-				esp_put_lspi_buf(&buf_addr);
-#else
 				kfree(buf_addr);
-#endif
 				buf_addr = NULL;
 				rx_cmd = NULL;
 				tx_cmd = NULL;
