@@ -258,11 +258,6 @@ struct sip_cmd_scan {
         u8 aborted;
 } __packed; // ie[] append at the end
 
-
-#ifndef ETH_ALEN
-#define ETH_ALEN 6
-#endif /* ETH_ALEN */
-
 struct sip_cmd_setkey {
         u8 bssid_no;
         u8 addr[ETH_ALEN];
