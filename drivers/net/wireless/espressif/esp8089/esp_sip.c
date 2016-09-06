@@ -1073,11 +1073,7 @@ static void sip_tx_status_report(struct esp_sip *sip, struct sk_buff *skb, struc
                 }
         }
 _exit:
-#ifndef FAST_TX_NOWAIT 
         skb_queue_tail(&sip->epub->txdoneq, skb);
-#else
-        ieee80211_tx_status(sip->epub->hw, skb);
-#endif
 }
 
 /*
@@ -1200,9 +1196,7 @@ sip_txq_process(struct esp_pub *epub)
 static void sip_after_write_pkts(struct esp_sip *sip)
 {
 
-#ifndef FAST_TX_NOWAIT
         sip_txdoneq_process(sip);
-#endif
 }
 
 #ifndef NO_WMM_DUMMY
