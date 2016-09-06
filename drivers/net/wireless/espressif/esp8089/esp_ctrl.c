@@ -20,9 +20,6 @@
 #include "esp_wl.h"
 #include "esp_file.h"
 #include "esp_path.h"
-#ifdef TEST_MODE
-#include "testmode.h"
-#endif /* TEST_MODE */
 #include "esp_version.h"
 
 extern struct completion *gl_bootup_cplx; 
@@ -58,50 +55,6 @@ static void esp_tx_ba_session_op(struct esp_sip *sip, struct esp_node *node, trc
                 }
         }
 }
-
-#ifdef TEST_MODE
-int sip_parse_event_debug(struct esp_pub *epub, const u8 *src, u8 *dst)
-{
-	struct sip_evt_debug* debug_evt =  (struct sip_evt_debug *)(src + SIP_CTRL_HDR_LEN);
-
-	switch (debug_evt->results[0]) {
-		case RDRSSI: {
-			u32 mask = debug_evt->results[1];
-			u8 *p = (u8 *)&debug_evt->results[2];
-			u8 index;
-			struct esp_node *enode;
-
-			while (mask != 0) {
-				index = ffs(mask) - 1;
-				if (index >= ESP_PUB_MAX_STA)
-					break;
-				enode = esp_get_node_by_index(epub, index);
-				if (enode == NULL) {
-					esp_dbg(ESP_DBG_ERROR, "trc mask dismatch");
-				} else {
-                 			dst += sprintf(dst, "%02x:%02x:%02x:%02x:%02x:%02x 0x%x 0x%x\n", 
-						enode->sta->addr[0], enode->sta->addr[1], enode->sta->addr[2],
-						enode->sta->addr[3], enode->sta->addr[4], enode->sta->addr[5],
-						*p, *(p+1));
-						p += 2;
-				}
-				mask &= ~(1<<index);
-			};
-                 	dst += sprintf(dst, "%c", '\0');
-					break;
-		}
-		default: {
-			int i;
-        		for(i = 1; i < debug_evt->len; i++)
-                 		dst += sprintf(dst, "0x%x%s", debug_evt->results[i], i == debug_evt->len -1 ? "":" " );
-			break;
-		}
-	}
-
-	return 0;
-}
-#endif /*TEST_MODE*/
-
 
 int sip_parse_events(struct esp_sip *sip, u8 *buf)
 {
@@ -168,44 +121,6 @@ int sip_parse_events(struct esp_sip *sip, u8 *buf)
         case SIP_EVT_CREDIT_RPT:
                 break;
 
-#ifdef TEST_MODE
-        case SIP_EVT_WAKEUP: {
-                u8 check_str[12];
-                struct sip_evt_wakeup* wakeup_evt=  (struct sip_evt_wakeup *)(buf + SIP_CTRL_HDR_LEN);
-                sprintf((char *)&check_str, "%d", wakeup_evt->check_data);
-                esp_test_cmd_event(TEST_CMD_WAKEUP, (char *)&check_str);
-                break;
-        }
-
-        case SIP_EVT_DEBUG: {
-                u8 check_str[640];
-		sip_parse_event_debug(sip->epub, buf, check_str);
-		esp_dbg(ESP_DBG_TRACE, "%s", check_str);
-                esp_test_cmd_event(TEST_CMD_DEBUG, (char *)&check_str);
-                break;
-        }
-
-        case SIP_EVT_LOOPBACK: {
-                u8 check_str[12];
-                struct sip_evt_loopback *loopback_evt = (struct sip_evt_loopback *)(buf + SIP_CTRL_HDR_LEN);
-                esp_dbg(ESP_DBG_LOG, "%s loopback len %d seq %u\n", __func__,hdr->len, hdr->seq);
-
-                if(loopback_evt->pack_id!=get_loopback_id()) {
-                        sprintf((char *)&check_str, "seq id error %d, expect %d", loopback_evt->pack_id, get_loopback_id());
-                        esp_test_cmd_event(TEST_CMD_LOOPBACK, (char *)&check_str);
-                }
-
-                if((loopback_evt->pack_id+1) <get_loopback_num()) {
-                        inc_loopback_id();
-                        sip_send_loopback_mblk(sip, loopback_evt->txlen, loopback_evt->rxlen, get_loopback_id());
-                } else {
-                        sprintf((char *)&check_str, "test over!");
-                        esp_test_cmd_event(TEST_CMD_LOOPBACK, (char *)&check_str);
-                }
-                break;
-        }
-#endif  /*TEST_MODE*/
-
         case SIP_EVT_SNPRINTF_TO_HOST: {
                 u8 *p = (buf + sizeof(struct sip_hdr) + sizeof(u16));
                 u16 *len = (u16 *)(buf + sizeof(struct sip_hdr));
@@ -243,22 +158,6 @@ int sip_parse_events(struct esp_sip *sip, u8 *buf)
                 }
                 break;
         }
-
-#ifdef TEST_MODE
-	case SIP_EVT_EP: {
-		char *ep = (char *)(buf + SIP_CTRL_HDR_LEN);
-		static int counter = 0;
-
-		esp_dbg(ESP_ATE, "%s EVT_EP \n\n", __func__);
-		if (counter++ < 2) {
-			esp_dbg(ESP_ATE, "ATE: %s \n", ep);
-		}
-
-		esp_test_ate_done_cb(ep);
-
-		break;
-	}
-#endif /*TEST_MODE*/
 
 	case SIP_EVT_INIT_EP: {
 		char *ep = (char *)(buf + SIP_CTRL_HDR_LEN);

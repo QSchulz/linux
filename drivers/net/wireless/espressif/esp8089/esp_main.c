@@ -82,30 +82,11 @@ int esp_pub_init_all(struct esp_pub *epub)
 
 	epub->sip->to_host_seq = 0;
 
-#ifdef TEST_MODE
-    if(sif_get_ate_config() != 0 &&  sif_get_ate_config() != 1 && sif_get_ate_config() !=6 )
-    {
-        esp_test_init(epub);
-        return -1;
-    }
-#endif
-
         ret = esp_download_fw(epub);
 #ifdef ESP_USE_SPI
 	if(sif_get_ate_config() != 1)
         	epub->enable_int = 1;
 #endif  
-#ifdef TEST_MODE
-        if(sif_get_ate_config() == 6)
-        {
-            sif_enable_irq(epub);
-            mdelay(500);
-            sif_disable_irq(epub);
-            mdelay(1000);
-            esp_test_init(epub);
-            return -1;
-        }
-#endif
         if (ret) {
                 esp_dbg(ESP_DBG_ERROR, "download firmware failed\n");
                 return ret;

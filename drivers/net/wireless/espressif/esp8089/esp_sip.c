@@ -27,10 +27,6 @@
 #include "slc_host_register.h"
 #include "esp_wmac.h"
 #include "esp_utils.h"
-#ifdef TEST_MODE
-#include "testmode.h"
-#endif
-
 #ifdef USE_EXT_GPIO
 #include "esp_ext.h"
 #endif /* USE_EXT_GPIO */
@@ -1810,14 +1806,6 @@ sip_poll_bootup_event(struct esp_sip *sip)
 		ret = esp_register_mac80211(sip->epub);
 	}
 
-#ifdef TEST_MODE
-        ret = test_init_netlink(sip);
-        if (ret < 0) {
-                esp_sip_dbg(ESP_DBG_TRACE, "esp_sdio: failed initializing netlink\n");
-		return ret;
-	}
-#endif
-        
 	atomic_set(&sip->state, SIP_RUN);
         esp_dbg(ESP_DBG_TRACE, "target booted up\n");
 

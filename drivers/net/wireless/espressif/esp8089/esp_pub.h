@@ -201,10 +201,4 @@ struct esp_node * esp_get_node_by_index(struct esp_pub * epub, u8 index);
 int esp_get_empty_rxampdu(struct esp_pub * epub, const u8 *addr, u8 tid);
 int esp_get_exist_rxampdu(struct esp_pub * epub, const u8 *addr, u8 tid);
 
-#ifdef TEST_MODE
-int test_init_netlink(struct esp_sip *sip);
-void test_exit_netlink(void);
-void esp_test_cmd_event(u32 cmd_type, char *reply_info);
-void esp_test_init(struct esp_pub *epub);
-#endif
 #endif /* _ESP_PUB_H_ */

@@ -2132,9 +2132,6 @@ static int esp_spi_remove(struct spi_device *spi)
 			sif_disable_irq(sctrl->epub);
 		}
 
-#ifdef TEST_MODE
-                test_exit_netlink();
-#endif /* TEST_MODE */
 		if(sif_sdio_state != ESP_SDIO_STATE_FIRST_NORMAL_EXIT){
                 	esp_pub_dealloc_mac80211(sctrl->epub);
                 	esp_dbg(ESP_DBG_TRACE, "%s dealloc mac80211 \n", __func__);

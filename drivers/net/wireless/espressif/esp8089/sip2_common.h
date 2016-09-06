@@ -423,43 +423,5 @@ struct sip_evt_noisefloor {
  *  for mblk direct memory access, no need for sip_hdr. tx: first 2k for contrl msg,
  *  rest of 14k for data.  rx, same.
  */
-#ifdef TEST_MODE
-
-struct sip_cmd_sleep {
-        u32  sleep_mode;
-        u32  sleep_tm_ms;
-        u32  wakeup_tm_ms;            //zero: after receive bcn, then sleep, nozero: delay nozero ms to sleep
-        u32  sleep_times;                 //zero: always sleep, nozero: after nozero number sleep/wakeup, then end up sleep
-} __packed;
-
-struct sip_cmd_wakeup {
-        u32     check_data;            //0:copy to event
-} __packed;
-
-struct sip_evt_wakeup {
-        u32    check_data;
-} __packed;
-
-//general debug command
-struct sip_cmd_debug {
-        u32  cmd_type;
-        u32  para_num;
-        u32  para[10];
-} __packed;
-
-struct sip_evt_debug {
-        u16    len;
-        u32    results[12];
-        u16    pad;
-} __packed;
-
-struct sip_cmd_ate {
-        //u8  len;
-	u8  cmdstr[0];
-} __packed;
-
-
-
-#endif  //ifdef TEST_MODE
 
 #endif /* _SIP_COMMON_H_ */
