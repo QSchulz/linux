@@ -1342,25 +1342,6 @@ static int sip_parse_mac_rx_info(struct esp_sip *sip, struct esp_mac_rx_ctrl * m
 			esp_add_wmm(skb);
 #endif 
 
-#ifdef KERNEL_IV_WAR
-		/* some kernel e.g. 3.0.8 wrongly handles non-encrypted pkt like eapol */
-		if (ieee80211_is_data(wh->frame_control)) {
-                        if( !ieee80211_has_protected(wh->frame_control)) {
-                                esp_sip_dbg(ESP_DBG_TRACE, "%s kiv_war, add iv_stripped flag \n", __func__);
-                                rx_status->flag |= RX_FLAG_IV_STRIPPED;
-                        } else {
-                                if ((atomic_read(&sip->epub->wl.ptk_cnt) == 0 && !(wh->addr1[0] & 0x1)) || 
-					(atomic_read(&sip->epub->wl.gtk_cnt) == 0 && (wh->addr1[0] & 0x1))) 
-				{
-                                        esp_dbg(ESP_DBG_TRACE, "%s ==kiv_war, got bogus enc pkt==\n", __func__);
-                                        rx_status->flag |= RX_FLAG_IV_STRIPPED;
-                                        //show_buf(skb->data, 32);
-                                }
-
-                                esp_sip_dbg(ESP_DBG_TRACE, "%s kiv_war, got enc pkt \n", __func__);
-                        }
-                }
-#endif /* KERNEL_IV_WAR*/
         } while (0);
 
         return 0;
