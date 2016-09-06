@@ -165,25 +165,6 @@ int sip_parse_events(struct esp_sip *sip, u8 *buf)
         }
 
 
-#ifdef ESP_RX_COPYBACK_TEST
-
-        case SIP_EVT_COPYBACK: {
-                u32 len = hdr->len - SIP_CTRL_HDR_LEN;
-
-                esp_dbg(ESP_DBG_TRACE, "%s copyback len %d   seq %u\n", __func__, len, hdr->seq);
-
-                memcpy(copyback_buf + copyback_offset, pkt->buf + SIP_CTRL_HDR_LEN, len);
-                copyback_offset += len;
-
-                //show_buf(pkt->buf, 256);
-
-                //how about totlen % 256 == 0??
-                if (hdr->hdr.len < 256) {
-                        kfree(copyback_buf);
-                }
-        }
-        break;
-#endif /* ESP_RX_COPYBACK_TEST */
         case SIP_EVT_CREDIT_RPT:
                 break;
 
