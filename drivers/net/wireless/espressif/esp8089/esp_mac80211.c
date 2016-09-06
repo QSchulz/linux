@@ -1358,15 +1358,9 @@ int esp_pub_dealloc_mac80211(struct esp_pub *epub)
         destroy_workqueue(epub->esp_wkq);
         mutex_destroy(&epub->tx_mtx);
 
-#ifdef ESP_NO_MAC80211
-        free_netdev(epub->net_dev);
-        wiphy_free(epub->wdev->wiphy);
-        kfree(epub->wdev);
-#else
         if (epub->hw) {
                 ieee80211_free_hw(epub->hw);
         }
-#endif
 
         return 0;
 }

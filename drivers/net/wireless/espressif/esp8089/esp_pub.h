@@ -126,15 +126,9 @@ struct esp_mac_prefix {
 
 struct esp_pub {
         struct device *dev;
-#ifdef ESP_NO_MAC80211
-        struct net_device *net_dev;
-        struct wireless_dev *wdev;
-        struct net_device_stats *net_stats;
-#else
         struct ieee80211_hw *hw;
         struct ieee80211_vif *vif;
         u8 vif_slot;
-#endif /* ESP_MAC80211 */
 
         void *sif; /* serial interface control block, e.g. sdio */
         enum esp_sdio_state sdio_state;

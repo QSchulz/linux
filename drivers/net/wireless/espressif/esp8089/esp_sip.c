@@ -1610,14 +1610,9 @@ void sip_detach(struct esp_sip *sip)
                 cancel_work_sync(&sip->epub->sendup_work);
                 skb_queue_purge(&sip->epub->rxq);
 
-#ifdef ESP_NO_MAC80211
-                unregister_netdev(sip->epub->net_dev);
-                wiphy_unregister(sip->epub->wdev->wiphy);
-#else
                 if (test_and_clear_bit(ESP_WL_FLAG_HW_REGISTERED, &sip->epub->wl.flags)) {
                         ieee80211_unregister_hw(sip->epub->hw);
                 }
-#endif
 
                 /* cancel all worker/timer */
                 cancel_work_sync(&sip->epub->tx_work);
@@ -1650,14 +1645,9 @@ void sip_detach(struct esp_sip *sip)
                         skb_queue_purge(&sip->epub->rxq);
                 }
 
-#ifdef ESP_NO_MAC80211
-                unregister_netdev(sip->epub->net_dev);
-                wiphy_unregister(sip->epub->wdev->wiphy);
-#else
                 if (test_and_clear_bit(ESP_WL_FLAG_HW_REGISTERED, &sip->epub->wl.flags)) {
                         ieee80211_unregister_hw(sip->epub->hw);
                 }
-#endif
                         atomic_set(&sip->state, SIP_INIT);
         } else
                 esp_dbg(ESP_DBG_ERROR, "%s wrong state %d\n", __func__, atomic_read(&sip->state));
