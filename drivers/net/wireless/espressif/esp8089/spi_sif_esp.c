@@ -2358,9 +2358,7 @@ static void __exit esp_spi_exit(void)
 
 	spi_unregister_driver(&esp_spi_driver);
 	
-#ifndef FPGA_DEBUG
 	sif_platform_target_poweroff();
-#endif /* !FPGA_DEBUG */
 
         esp_wakelock_destroy();
 }

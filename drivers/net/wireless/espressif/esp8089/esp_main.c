@@ -23,9 +23,7 @@
 
 struct completion *gl_bootup_cplx = NULL;
 
-#ifndef FPGA_DEBUG
 static int esp_download_fw(struct esp_pub * epub);
-#endif /* !FGPA_DEBUG */
 
 static int modparam_no_txampdu = 0;
 static int modparam_no_rxampdu = 0;
@@ -92,7 +90,6 @@ int esp_pub_init_all(struct esp_pub *epub)
     }
 #endif
 
-#ifndef FPGA_DEBUG
         ret = esp_download_fw(epub);
 #ifdef ESP_USE_SPI
 	if(sif_get_ate_config() != 1)
@@ -115,9 +112,6 @@ int esp_pub_init_all(struct esp_pub *epub)
         }
 
         esp_dbg(ESP_DBG_TRACE, "download firmware OK \n");
-#else
-        sip_send_bootup(epub->sip);
-#endif /* FPGA_DEBUG */
 
 	gl_bootup_cplx = &complete;
 	epub->wait_reset = 0;
@@ -166,7 +160,6 @@ struct esp_fw_blk_hdr {
 #define ESP_FW_NAME2 "eagle_fw2.bin"
 #define ESP_FW_NAME3 "eagle_fw3.bin"
 
-#ifndef FPGA_DEBUG
 static int esp_download_fw(struct esp_pub * epub)
 {
         u8 * fw_buf = NULL;
@@ -225,8 +218,3 @@ _err:
         return ret;
 
 }
-#endif /* !FPGA_DEBUG */
-
-
-
-

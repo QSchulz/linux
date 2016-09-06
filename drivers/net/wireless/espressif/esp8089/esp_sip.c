@@ -252,15 +252,11 @@ void sip_trigger_txq_process(struct esp_sip *sip)
                 /* try to send out pkt already in sip queue once we have credits */
                 esp_sip_dbg(ESP_DBG_TRACE, "%s resume sip txq \n", __func__);
 
-#if !defined(FPGA_TXDATA)
                 if(sif_get_ate_config() == 0){
                         ieee80211_queue_work(sip->epub->hw, &sip->epub->tx_work);
                 } else {
                         queue_work(sip->epub->esp_wkq, &sip->epub->tx_work);
                 } 
-#else
-                queue_work(sip->epub->esp_wkq, &sip->epub->tx_work);
-#endif
         }
 }
 
@@ -1897,26 +1893,6 @@ sip_poll_resetting_event(struct esp_sip *sip)
 
 	return 0;
 }
-
-
-#ifdef FPGA_DEBUG
-
-/* bogus bootup cmd for FPGA debugging */
-int
-sip_send_bootup(struct esp_sip *sip)
-{
-        int ret;
-        struct sip_cmd_bootup bootcmd;
-
-        esp_dbg(ESP_DBG_LOG, "sending bootup\n");
-
-        bootcmd.boot_addr = 0;
-        ret = sip_send_cmd(sip, SIP_CMD_BOOTUP, sizeof(struct sip_cmd_bootup), &bootcmd);
-
-        return ret;
-}
-
-#endif /* FPGA_DEBUG */
 
 bool
 sip_queue_need_stop(struct esp_sip *sip)

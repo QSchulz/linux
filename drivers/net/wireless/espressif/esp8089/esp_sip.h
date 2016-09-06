@@ -153,8 +153,5 @@ bool mod_support_no_rxampdu(void);
 
 void mod_support_no_txampdu_set(bool value);
 
-#ifdef FPGA_DEBUG
-int sip_send_bootup(struct esp_sip *sip);
-#endif /* FPGA_DEBUG */
 void sip_debug_show(struct esp_sip *sip);
 #endif

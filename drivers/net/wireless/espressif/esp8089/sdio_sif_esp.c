@@ -875,9 +875,7 @@ static void  /*__exit*/ esp_sdio_exit(void)
 	
 	sif_platform_rescan_card(0);
 
-#ifndef FPGA_DEBUG
 	sif_platform_target_poweroff();
-#endif /* !FPGA_DEBUG */
 
         esp_wakelock_destroy();
 }
