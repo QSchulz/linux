@@ -115,10 +115,6 @@ static bool sip_rx_pkt_process(struct esp_sip * sip, struct sk_buff *skb);
 
 static void sip_tx_status_report(struct esp_sip *sip, struct sk_buff *skb, struct ieee80211_tx_info* tx_info, bool success);
 
-#ifdef FPGA_TXDATA
-int sip_send_tx_data(struct esp_sip *sip);
-#endif/* FPGA_TXDATA */
-
 static bool check_ac_tid(u8 *pkt, u8 ac, u8 tid)
 {
         struct ieee80211_hdr * wh = (struct ieee80211_hdr *)pkt;
@@ -1958,21 +1954,3 @@ void sip_tx_data_pkt_enqueue(struct esp_pub *epub, struct sk_buff *skb)
 
 	}
 }
-
-#ifdef FPGA_TXDATA
-int sip_send_tx_data(struct esp_sip *sip)
-{
-        struct sk_buff *skb = NULL;
-        struct sip_cmd_bss_info_update*bsscmd;
-
-        skb = sip_alloc_ctrl_skbuf(epub->sip, sizeof(struct sip_cmd_bss_info_update), SIP_CMD_BSS_INFO_UPDATE);
-        if (!skb)
-                return -EINVAL;
-
-        bsscmd = (struct sip_cmd_bss_info_update *)(skb->data + sizeof(struct sip_tx_info));
-        bsscmd->isassoc= (assoc==true)? 1: 0;
-        memcpy(bsscmd->bssid, bssid, ETH_ALEN);
-        STRACE_SHOW(epub->sip);
-        return sip_cmd_enqueue(epub->sip, skb, ENQUEUE_PRIOR_TAIL);
-}
-#endif /* FPGA_TXDATA */
