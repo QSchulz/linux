@@ -1157,9 +1157,6 @@ sip_txq_process(struct esp_pub *epub)
         }
 
         if (atomic_read(&sip->state) == SIP_STOP 
-#ifdef HOST_RESET_BUG
-		|| atomic_read(&epub->wl.off) == 1
-#endif
 		)
 	{
 		queued_back = 1;

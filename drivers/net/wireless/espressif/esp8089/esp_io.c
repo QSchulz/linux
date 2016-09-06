@@ -538,14 +538,8 @@ void sif_disable_target_interrupt(struct esp_pub *epub)
 {
 	EPUB_FUNC_CHECK(epub, _exit);
 	sif_lock_bus(epub);
-#ifdef HOST_RESET_BUG
-	mdelay(10);
-#endif
 	memset(EPUB_TO_CTRL(epub)->dma_buffer, 0x00, sizeof(u32));
 	esp_common_write_with_addr(epub, SLC_HOST_INT_ENA, EPUB_TO_CTRL(epub)->dma_buffer, sizeof(u32), ESP_SIF_NOSYNC);
-#ifdef HOST_RESET_BUG
-	mdelay(10);
-#endif
 
 	sif_unlock_bus(epub);
 

@@ -106,10 +106,6 @@ static void esp_op_stop(struct ieee80211_hw *hw)
 
 	atomic_set(&epub->wl.off, 1);
 
-#ifdef HOST_RESET_BUG
-	mdelay(200);
-#endif
-
 	if (epub->wl.scan_req) {
 		hw_scan_done(epub, true);
 		epub->wl.scan_req=NULL;
