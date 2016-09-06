@@ -57,10 +57,6 @@ esp_op_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control, struct 
 		}
 	}
 
-#ifdef GEN_ERR_CHECKSUM
-	esp_gen_err_checksum(skb);
-#endif
-
 	sip_tx_data_pkt_enqueue(epub, skb);
 	if (epub)
 		ieee80211_queue_work(hw, &epub->tx_work);

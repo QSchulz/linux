@@ -172,35 +172,6 @@ void esp_rx_checksum_test(struct sk_buff *skb)
 
 #endif
 
-#ifdef GEN_ERR_CHECKSUM
-
-void esp_gen_err_checksum(struct sk_buff *skb)
-{
-        static u32 tx_seq = 0;
-    	if ((tx_seq++ % 16) == 0)
-    	{
-    		struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
-    		int hdrlen = ieee80211_hdrlen(hdr->frame_control);
-	
-		if(ieee80211_has_protected(pwh->frame_control))
-                	hdrlen += IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
-
-    		struct llc_snap_hdr * llc = (struct llc_snap_hdr *)(skb->data + hdrlen);
-    		if (ntohs(llc->eth_type) == ETH_P_IP) {
-    			int llclen = sizeof(struct llc_snap_hdr);
-    			struct iphdr *iph = (struct iphdr *)(skb->data + hdrlen + llclen);
-
-    			iph->check = ~iph->check;
-
-    			if (iph->protocol == 0x06) {
-    				struct tcphdr *tcph = (struct tcphdr *)(skb->data + hdrlen + llclen + iph->ihl * 4);
-    				tcph->check = ~tcph->check;
-    			}
-    		}
-    	}
-}
-#endif
-
 bool esp_is_ip_pkt(struct sk_buff *skb)
 {
                 struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
