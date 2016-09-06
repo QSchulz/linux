@@ -119,10 +119,6 @@ static void sip_tx_status_report(struct esp_sip *sip, struct sk_buff *skb, struc
 int sip_send_tx_data(struct esp_sip *sip);
 #endif/* FPGA_TXDATA */
 
-#ifdef FPGA_LOOPBACK
-int sip_send_loopback_cmd_mblk(struct esp_sip *sip);
-#endif /* FPGA_LOOPBACK */
-
 static bool check_ac_tid(u8 *pkt, u8 ac, u8 tid)
 {
         struct ieee80211_hdr * wh = (struct ieee80211_hdr *)pkt;

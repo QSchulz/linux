@@ -570,20 +570,6 @@ int sip_send_setkey(struct esp_pub *epub, u8 bssid_no, u8 *peer_addr, struct iee
         return sip_cmd_enqueue(epub->sip, skb, ENQUEUE_PRIOR_TAIL);
 }
 
-#ifdef FPGA_LOOPBACK
-#define LOOPBACK_PKT_LEN 200
-int sip_send_loopback_cmd_mblk(struct esp_sip *sip)
-{
-        int cnt, ret;
-
-        for (cnt = 0; cnt < 4; cnt++) {
-                if (0!=(ret=sip_send_loopback_mblk(sip, LOOPBACK_PKT_LEN, LOOPBACK_PKT_LEN, 0)))
-                        return ret;
-        }
-        return 0;
-}
-#endif /* FPGA_LOOPBACK */
-
 int sip_send_loopback_mblk(struct esp_sip *sip, int txpacket_len, int rxpacket_len, int packet_id)
 {
         struct sk_buff *skb = NULL;
