@@ -1184,7 +1184,6 @@ static void sip_after_write_pkts(struct esp_sip *sip)
         sip_txdoneq_process(sip);
 }
 
-#ifndef NO_WMM_DUMMY
 static struct esp_80211_wmm_param_element esp_wmm_param = {
 	.oui = {0x00, 0x50, 0xf2},
 	.oui_type = 0x02,
@@ -1278,7 +1277,6 @@ static int esp_add_wmm(struct sk_buff *skb)
 
 	return 0;
 }
-#endif /* NO_WMM_DUMMY */
 
 /*  parse mac_rx_ctrl and return length */
 static int sip_parse_mac_rx_info(struct esp_sip *sip, struct esp_mac_rx_ctrl * mac_ctrl, struct sk_buff *skb)
@@ -1337,10 +1335,8 @@ static int sip_parse_mac_rx_info(struct esp_sip *sip, struct esp_mac_rx_ctrl * m
         do {
                 struct ieee80211_hdr * wh = (struct ieee80211_hdr *)((u8 *)skb->data);
 
-#ifndef NO_WMM_DUMMY
 		if (ieee80211_is_mgmt(wh->frame_control))
 			esp_add_wmm(skb);
-#endif 
 
         } while (0);
 
@@ -1394,11 +1390,7 @@ static struct sk_buff * sip_parse_data_rx_info(struct esp_sip *sip, struct sk_bu
                 pkt_len  = buf_len - 3 + ((pkt_len_enc - 1) & 0x3);
         esp_dbg(ESP_DBG_TRACE, "%s pkt_len %u, pkt_len_enc %u!, delta %d \n", __func__, pkt_len, pkt_len_enc, pkt_len_enc - pkt_len);
         do {
-#ifndef NO_WMM_DUMMY
                 rskb = __dev_alloc_skb(pkt_len_enc + sizeof(esp_wmm_param) + 2, GFP_ATOMIC);
-#else
-                rskb = __dev_alloc_skb(pkt_len_enc, GFP_ATOMIC);
-#endif /* NO_WMM_DUMMY */
                 if (unlikely(rskb == NULL)) {
                         esp_sip_dbg(ESP_DBG_ERROR, "%s no mem for rskb\n", __func__);
                         return NULL;

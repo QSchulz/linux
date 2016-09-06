@@ -193,9 +193,7 @@ enum if_dummymode {
 	DUMMYMODE,
 };
 
-#ifdef REGISTER_SPI_BOARD_INFO
 void sif_platform_register_board_info(void);
-#endif
 
 void sif_dsr(struct spi_device *spi);
 int sif_spi_read_mix_nosync(struct spi_device *spi, unsigned int addr, unsigned char *buf, int len, int dummymode);

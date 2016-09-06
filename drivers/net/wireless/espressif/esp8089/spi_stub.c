@@ -56,7 +56,6 @@ struct spi_device_id esp_spi_id[] = {
 };
 
 
-#ifdef  REGISTER_SPI_BOARD_INFO
 static struct rk29xx_spi_chip spi_test_chip[] = {
 {
         //.poll_mode = 1,
@@ -82,7 +81,6 @@ static struct spi_board_info esp_board_spi_devices[] = {
 void sif_platform_register_board_info(void) {
         spi_register_board_info(esp_board_spi_devices, ARRAY_SIZE(esp_board_spi_devices));
 }
-#endif  /*REGISTER_SPI_BOARD_INFO*/
 
 
 #define RK30_GPIO0_BASE          RK2928_GPIO0_BASE

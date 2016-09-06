@@ -2259,9 +2259,7 @@ static int __init esp_spi_init(void)
 
         esp_dbg(ESP_DBG_TRACE, "%s \n", __func__);
 
-#ifdef REGISTER_SPI_BOARD_INFO
 	sif_platform_register_board_info();
-#endif
 
 #ifdef DRIVER_VER
         ver = DRIVER_VER;
