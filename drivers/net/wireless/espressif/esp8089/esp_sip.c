@@ -748,11 +748,6 @@ int sip_post_init(struct esp_sip *sip, struct sip_evt_bootup2 *bevt)
         epub->mac_addr[1] = esp_mac_prefix_table[mac_index].mac_addr_prefix[1];
         epub->mac_addr[2] = esp_mac_prefix_table[mac_index].mac_addr_prefix[2];
 
-#ifdef SELF_MAC
-        epub->mac_addr[0] = 0xff;            
-        epub->mac_addr[1] = 0xff;        
-        epub->mac_addr[2] = 0xff;             
-#endif
         atomic_set(&sip->noise_floor, bevt->noise_floor);
 
 	sip_recalc_credit_init(sip);
