@@ -22,10 +22,6 @@ int esp_request_firmware(const struct firmware **firmware_p, const char *name, s
 
 void esp_release_firmware(const struct firmware *firmware);
 
-#ifdef INIT_DATA_CONF
-#define INIT_CONF_FILE "init_data.conf"
-#endif /* def INIT_DATA_CONF */
-
 #define CONF_ATTR_LEN 24
 #define CONF_VAL_LEN 3
 #define MAX_ATTR_NUM 24
