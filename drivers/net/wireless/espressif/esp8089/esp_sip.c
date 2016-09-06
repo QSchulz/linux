@@ -361,9 +361,6 @@ static bool sip_rx_pkt_process(struct esp_sip * sip, struct sk_buff *skb)
 				goto _move_on;
 
 			if (likely(atomic_read(&sip->epub->wl.off) == 0)) {
-#ifdef RX_CHECKSUM_TEST
-				esp_rx_checksum_test(rskb);
-#endif
 				local_bh_disable();
 				ieee80211_rx(sip->epub->hw, rskb);
 				local_bh_enable();
@@ -426,9 +423,6 @@ static bool sip_rx_pkt_process(struct esp_sip * sip, struct sk_buff *skb)
 							frame_head[1] &= ~0x80;
 							frame_buf_ttl = 3;
 						}
-#ifdef RX_CHECKSUM_TEST
-						esp_rx_checksum_test(rskb);
-#endif
 						local_bh_disable();
 						ieee80211_rx(sip->epub->hw, rskb);
 						local_bh_enable();

@@ -127,51 +127,6 @@ int esp_cipher2alg(int cipher)
         return -1;
 }
 
-#ifdef RX_CHECKSUM_TEST
-atomic_t g_iv_len;
-void esp_rx_checksum_test(struct sk_buff *skb)
-{
-	static u32 ip_err = 0;
-	static u32 tcp_err = 0;
-	struct ieee80211_hdr *pwh = (struct ieee80211_hdr *)skb->data;
-	int hdrlen = ieee80211_hdrlen(pwh->frame_control);
-	
-	if(ieee80211_has_protected(pwh->frame_control))
-		hdrlen += atomic_read(&g_iv_len);
-
-	if (ieee80211_is_data(pwh->frame_control)) {
-		struct llc_snap_hdr * llc = (struct llc_snap_hdr *)(skb->data + hdrlen);
-		if (ntohs(llc->eth_type) == ETH_P_IP) {
-			int llclen = sizeof(struct llc_snap_hdr);
-			struct iphdr *iph = (struct iphdr *)(skb->data + hdrlen + llclen);
-			__sum16 csum_bak = iph->check;
-
-			iph->check = 0;
-			iph->check = ip_fast_csum(iph, iph->ihl);
-			if (iph->check != csum_bak) {
-				esp_dbg(ESP_DBG_ERROR, "total ip checksum error %d\n", ++ip_err);
-			}
-			iph->check = csum_bak;
-
-			if (iph->protocol == 0x06) {
-				struct tcphdr *tcph = (struct tcphdr *)(skb->data + hdrlen + llclen + iph->ihl * 4);
-				int datalen = skb->len - (hdrlen + llclen + iph->ihl * 4);
-				csum_bak = tcph->check;
-
-				tcph->check = 0;
-				tcph->check = tcp_v4_check(datalen, iph->saddr, iph->daddr, csum_partial((char *)tcph, datalen, 0));
-				if (tcph->check != csum_bak)
-				{
-					esp_dbg(ESP_DBG_ERROR, "total tcp checksum error %d\n", ++tcp_err);
-				}
-				tcph->check = csum_bak;
-			}
-        }
-	}
-}
-
-#endif
-
 bool esp_is_ip_pkt(struct sk_buff *skb)
 {
                 struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
@@ -184,9 +139,6 @@ bool esp_is_ip_pkt(struct sk_buff *skb)
 		hdrlen = ieee80211_hdrlen(hdr->frame_control);
 		if(ieee80211_has_protected(hdr->frame_control))
                 	hdrlen += IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
-#ifdef RX_CHECKSUM_TEST
-		atomic_set(&g_iv_len, IEEE80211_SKB_CB(skb)->control.hw_key->iv_len);
-#endif
 		if(skb->len < hdrlen + sizeof(struct llc_snap_hdr))
 			return false;
 		llc = (struct llc_snap_hdr *)(skb->data + hdrlen);
