@@ -1570,20 +1570,6 @@ esp_register_mac80211(struct esp_pub *epub)
         if (ret < 0) {
                 ESP_IEEE80211_DBG(ESP_DBG_ERROR, "unable to register mac80211 hw: %d\n", ret);
                 return ret;
-        } else {
-#ifdef MAC80211_NO_CHANGE
-        	rtnl_lock();
-		if (epub->hw->wiphy->interface_modes &
-                (BIT(NL80211_IFTYPE_P2P_GO) | BIT(NL80211_IFTYPE_P2P_CLIENT))) {
-                ret = ieee80211_if_add(hw_to_local(epub->hw), "p2p%d", NULL,
-                                          NL80211_IFTYPE_STATION, NULL);
-                if (ret)
-                        wiphy_warn(epub->hw->wiphy,
-                                   "Failed to add default virtual iface\n");
-        	}
-
-        	rtnl_unlock();
-#endif
 	}
 
         set_bit(ESP_WL_FLAG_HW_REGISTERED, &epub->wl.flags);
