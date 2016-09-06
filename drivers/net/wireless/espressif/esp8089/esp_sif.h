@@ -278,11 +278,6 @@ int sif_get_retry_config(void);
 void sif_record_wakeup_gpio_config(int value);
 int sif_get_wakeup_gpio_config(void);
 
-#ifdef ESP_ACK_INTERRUPT
-//extern void sif_platform_ack_interrupt(struct mmc_host *mmc);
-extern void sif_platform_ack_interrupt(struct esp_pub *epub);
-#endif //ESP_ACK_INTERRUPT
-
 #define sif_reg_read_sync(epub, addr, buf, len) sif_io_sync((epub), (addr), (buf), (len), SIF_FROM_DEVICE | SIF_BYTE_BASIS | SIF_INC_ADDR)
 
 #define sif_reg_write_sync(epub, addr, buf, len) sif_io_sync((epub), (addr), (buf), (len), SIF_TO_DEVICE | SIF_BYTE_BASIS | SIF_INC_ADDR)

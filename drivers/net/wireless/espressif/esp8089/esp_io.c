@@ -506,9 +506,6 @@ void sif_dsr(struct sdio_func *func)
 			esp_dsr(sctrl->epub);
 
                 } else {
-#ifdef ESP_ACK_INTERRUPT
-			sif_platform_ack_interrupt(sctrl->epub);
-#endif //ESP_ACK_INTERRUPT
 			sif_unlock_bus(sctrl->epub);
 
                         esp_dbg(ESP_DBG_TRACE, "%s bogus_intr_cnt %d\n", __func__, ++bogus_intr_cnt);

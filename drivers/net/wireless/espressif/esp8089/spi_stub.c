@@ -168,14 +168,6 @@ void sif_platform_target_speed(int high_speed)
 {
 }
 
-#ifdef ESP_ACK_INTERRUPT
-void sif_platform_ack_interrupt(struct esp_pub *epub)
-{
-	sif_platform_irq_clear();
-}
-#endif //ESP_ACK_INTERRUPT
-
-
 module_init(esp_spi_init);
 module_exit(esp_spi_exit);
 
