@@ -111,10 +111,6 @@ static enum esp_sdio_state sif_sdio_state;
 struct esp_spi_ctrl *sif_sctrl = NULL;
 static struct esp_spi_resp spi_resp;
 
-#ifdef REQUEST_RTC_IRQ
-extern int request_rtc_irq(void);
-#endif
-
 #include "spi_stub.c"
 
 struct esp_spi_resp *sif_get_spi_resp(void)
@@ -2334,9 +2330,6 @@ static int __init esp_spi_init(void)
 
         esp_register_early_suspend();
 	esp_wake_unlock();
-#ifdef REQUEST_RTC_IRQ
-	request_rtc_irq();
-#endif
         return err;
 
 _fail:
