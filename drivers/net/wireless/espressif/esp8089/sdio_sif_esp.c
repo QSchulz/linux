@@ -574,11 +574,6 @@ static int esp_sdio_probe(struct sdio_func *func, const struct sdio_device_id *i
 
         sdio_release_host(func);
 
-#ifdef LOWER_CLK 
-        /* fix clock for dongle */
-	sif_set_clock(func, 23);
-#endif //LOWER_CLK
-
         err = esp_pub_init_all(epub);
 
         if (err) {
