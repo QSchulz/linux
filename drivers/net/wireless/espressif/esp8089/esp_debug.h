@@ -52,10 +52,6 @@ enum {
 
 extern unsigned int esp_msg_level;
 
-#ifdef ESP_ANDROID_LOGGER
-extern bool log_off;
-#endif /* ESP_ANDROID_LOGGER */
-
 #define esp_dbg(mask, fmt, args...) do {                  \
         if (esp_msg_level & mask)                         \
             printk(fmt, ##args);                          \
