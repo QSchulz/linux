@@ -143,6 +143,7 @@ struct esp_fw_blk_hdr {
 
 static int esp_download_fw(struct esp_pub * epub)
 {
+	const struct firmware *fw_entry;
         u8 * fw_buf = NULL;
         u32 offset = 0;
         int ret = 0;
@@ -150,15 +151,25 @@ static int esp_download_fw(struct esp_pub * epub)
         struct esp_fw_hdr *fhdr;
         struct esp_fw_blk_hdr *bhdr=NULL;
         struct sip_cmd_bootup bootcmd;
+	char *esp_fw_name;
 
-#include "eagle_fw1.h"
-#include "eagle_fw2.h"
-#include "eagle_fw3.h"
-        if(sif_get_ate_config() == 1){
-            fw_buf =  &eagle_fw3[0];
-        } else {
-            fw_buf = epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT ? &eagle_fw1[0] : &eagle_fw2[0];
-        }
+	if(sif_get_ate_config() == 1) {
+		esp_fw_name = ESP_FW_NAME3;
+	} else {
+		esp_fw_name = epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT ? ESP_FW_NAME1 : ESP_FW_NAME2;
+	}
+	ret = esp_request_firmware(&fw_entry, esp_fw_name, epub->dev);
+
+	if (ret)
+		return ret;
+
+	fw_buf = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+
+	esp_release_firmware(fw_entry);
+
+	if (fw_buf == NULL) {
+		return -ENOMEM;
+	}
 
         fhdr = (struct esp_fw_hdr *)fw_buf;
 
@@ -195,6 +206,7 @@ static int esp_download_fw(struct esp_pub * epub)
                 goto _err;
 
 _err:
+	kfree(fw_buf);
 
         return ret;
 
