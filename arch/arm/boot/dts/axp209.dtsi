@@ -95,4 +95,17 @@
 		compatible = "x-powers,axp202-usb-power-supply";
 		status = "disabled";
 	};
+
+	axp209_adc: axp209_adc {
+		compatible = "x-powers,axp209-adc";
+		status = "enabled";
+		#io-channel-cells = <1>;
+	};
+
+	battery_power_supply: battery_power_supply {
+		compatible = "x-powers,axp209-battery-power-supply";
+		status = "enabled";
+		#io-channels = <&axp209_adc 8>, <&axp209_adc 9>, <&axp209_adc 10>, <&axp209_adc 11>;
+		#io-channel-names = "pwr_batt", "batt_v", "batt_chrg_i", "batt_dischrg_i";
+	};
 };

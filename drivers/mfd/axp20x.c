@@ -66,6 +66,7 @@ static const struct regmap_range axp20x_writeable_ranges[] = {
 	regmap_reg_range(AXP20X_DATACACHE(0), AXP20X_IRQ5_STATE),
 	regmap_reg_range(AXP20X_DCDC_MODE, AXP20X_FG_RES),
 	regmap_reg_range(AXP20X_RDC_H, AXP20X_OCV(AXP20X_OCV_MAX)),
+//	regmap_reg_range(AXP20X_OCV(0), AXP20X_OCV(15)),
 };
 
 static const struct regmap_range axp20x_volatile_ranges[] = {
@@ -250,6 +251,101 @@ static const struct regmap_config axp152_regmap_config = {
 	.max_register	= AXP152_PWM1_DUTY_CYCLE,
 	.cache_type	= REGCACHE_RBTREE,
 };
+
+static struct resource axp20x_power_resources[] = {
+	{
+		.name	= "ACIN_OVER_V",
+		.start	= AXP20X_IRQ_ACIN_OVER_V,
+		.end	= AXP20X_IRQ_ACIN_OVER_V,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "ACIN_PLUGIN",
+		.start	= AXP20X_IRQ_ACIN_PLUGIN,
+		.end	= AXP20X_IRQ_ACIN_PLUGIN,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "ACIN_REMOVAL",
+		.start	= AXP20X_IRQ_ACIN_REMOVAL,
+		.end	= AXP20X_IRQ_ACIN_REMOVAL,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "VBUS_OVER_V",
+		.start	= AXP20X_IRQ_VBUS_OVER_V,
+		.end	= AXP20X_IRQ_VBUS_OVER_V,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "VBUS_PLUGIN",
+		.start	= AXP20X_IRQ_VBUS_PLUGIN,
+		.end	= AXP20X_IRQ_VBUS_PLUGIN,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "VBUS_REMOVAL",
+		.start	= AXP20X_IRQ_VBUS_REMOVAL,
+		.end	= AXP20X_IRQ_VBUS_REMOVAL,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "VBUS_V_LOW",
+		.start	= AXP20X_IRQ_VBUS_V_LOW,
+		.end	= AXP20X_IRQ_VBUS_V_LOW,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_PLUGIN",
+		.start	= AXP20X_IRQ_BATT_PLUGIN,
+		.end	= AXP20X_IRQ_BATT_PLUGIN,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_REMOVAL",
+		.start	= AXP20X_IRQ_BATT_REMOVAL,
+		.end	= AXP20X_IRQ_BATT_REMOVAL,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_ACTIVATE",
+		.start	= AXP20X_IRQ_BATT_ENT_ACT_MODE,
+		.end	= AXP20X_IRQ_BATT_ENT_ACT_MODE,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_ACTIVATED",
+		.start	= AXP20X_IRQ_BATT_EXIT_ACT_MODE,
+		.end	= AXP20X_IRQ_BATT_EXIT_ACT_MODE,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_CHARGING",
+		.start	= AXP20X_IRQ_CHARG,
+		.end	= AXP20X_IRQ_CHARG,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_CHARGED",
+		.start	= AXP20X_IRQ_CHARG_DONE,
+		.end	= AXP20X_IRQ_CHARG_DONE,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_HOT",
+		.start	= AXP20X_IRQ_BATT_TEMP_HIGH,
+		.end	= AXP20X_IRQ_BATT_TEMP_HIGH,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_COLD",
+		.start	= AXP20X_IRQ_BATT_TEMP_LOW,
+		.end	= AXP20X_IRQ_BATT_TEMP_LOW,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "BATT_CHG_CURR_LOW",
+		.start	= AXP20X_IRQ_CHARG_I_LOW,
+		.end	= AXP20X_IRQ_CHARG_I_LOW,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "POWER_LOW_WARN",
+		.start	= AXP20X_IRQ_LOW_PWR_LVL1,
+		.end	= AXP20X_IRQ_LOW_PWR_LVL1,
+		.flags	= IORESOURCE_IRQ,
+	}, {
+		.name	= "POWER_LOW_CRIT",
+		.start	= AXP20X_IRQ_LOW_PWR_LVL2,
+		.end	= AXP20X_IRQ_LOW_PWR_LVL2,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
 
 static const struct regmap_config axp20x_regmap_config = {
 	.reg_bits	= 8,
@@ -513,6 +609,10 @@ static struct mfd_cell axp20x_cells[] = {
 		.resources	= axp20x_pek_resources,
 	}, {
 		.name		= "axp20x-regulator",
+	}, {
+		.name		= "x-powers,axp20x-adc",
+		.num_resources	= ARRAY_SIZE(axp20x_power_resources),
+		.resources	= axp20x_power_resources,
 	}, {
 		.name		= "axp20x-ac-power-supply",
 		.of_compatible	= "x-powers,axp202-ac-power-supply",

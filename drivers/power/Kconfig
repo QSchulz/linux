@@ -82,6 +82,12 @@ config BATTERY_ACT8945A
 	  Say Y here to enable support for power supply provided by
 	  Active-semi ActivePath ACT8945A charger.
 
+config BATTERY_AXP20X
+	tristate "X-Powers AXP20X battery driver"
+	depends on MFD_AXP20X
+	help
+	  Say Y here to enable support for X-Powers AXP PMICs' battery power supply.
+
 config BATTERY_DS2760
 	tristate "DS2760 battery driver (HP iPAQ & others)"
 	depends on W1 && W1_SLAVE_DS2760
@@ -510,6 +516,8 @@ config AXP20X_POWER
 	help
 	  This driver provides support for the power supply features of
 	  AXP20x PMIC.
+	  Included features are: AC-power, USB-power, Battery charger
+	  (RTC backup-battery and Lithium main bettery).
 
 endif # POWER_SUPPLY
 
