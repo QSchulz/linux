@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) 2011-2012 Espressif System.
+ */
+
+#ifndef _ESP_UTILS_H_
+#define _ESP_UTILS_H_
+
+#include "linux/types.h"
+
+u32 esp_ieee2mhz(u8 chan);
+
+enum ieee80211_key_alg {
+	ALG_WEP,
+	ALG_TKIP,
+	ALG_CCMP,
+	ALG_AES_CMAC
+};
+
+int esp_cipher2alg(int cipher);
+#endif
