@@ -43,6 +43,7 @@
  */
 
 #include "sun8i-a23-a33.dtsi"
+#include <dt-bindings/thermal/thermal.h>
 
 / {
 	cpus {
@@ -64,6 +65,50 @@
 		allwinner,pipelines = <&fe0>;
 		status = "disabled";
 	};
+        thermal-zones {
+
+                cpu_thermal {
+                        /* milliseconds */
+                        polling-delay-passive = <250>;
+                        polling-delay = <1000>;
+                        thermal-sensors = <&rtp>;
+
+                        cooling-maps {
+                                map0 {
+                                        trip = <&cpu_alert0>;
+                                        cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+                                };
+
+                                map1 {
+                                        trip = <&cpu_alert1>;
+                                        cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+                                };
+                        };
+
+                        trips {
+                                cpu_alert0: cpu_alert0 {
+                                        /* milliCelsius */
+                                        temperature = <75000>;
+                                        hysteresis = <2000>;
+                                        type = "passive";
+                                };
+
+                                cpu_alert1: cpu_alert1 {
+                                        /* milliCelsius */
+                                        temperature = <90000>;
+                                        hysteresis = <2000>;
+                                        type = "hot";
+                                };
+
+                                cpu_crit: cpu_crit {
+                                        /* milliCelsius */
+                                        temperature = <110000>;
+                                        hysteresis = <2000>;
+                                        type = "critical";
+                                };
+                        };
+                };
+        };
 
 	memory {
 		reg = <0x40000000 0x80000000>;
@@ -225,6 +270,19 @@
 				};
 			};
 		};
+
+		rtp: rtp@01c25000 {
+			compatible = "allwinner,sun8i-a33-gpadc-iio";
+			reg = <0x01c25000 0x100>;
+			interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
+			#thermal-sensor-cells = <0>;
+			#io-channel-cells = <0>;
+		};
+	};
+
+	iio-hwmon {
+		compatible = "iio-hwmon";
+		io-channels = <&rtp>;
 	};
 };
 

@@ -1,4 +1,4 @@
-/* ADC driver for sunxi platforms' (A10, A13 and A31) GPADC
+/* ADC driver for sunxi platforms' (A10, A13, A31 and A33) GPADC
  *
  * Copyright (c) 2016 Quentin Schulz <quentin.schulz@free-electrons.com>
  *
@@ -80,6 +80,12 @@ static const struct gpadc_data sun6i_gpadc_data = {
 	.adc_chan_select = &sun6i_gpadc_chan_select,
 };
 
+static const struct gpadc_data sun8i_gpadc_data = {
+	.temp_offset = -1662,
+	.temp_scale = 162,
+	.tp_mode_en = SUN8I_GPADC_CTRL1_CHOP_TEMP_EN,
+};
+
 struct sun4i_gpadc_iio {
 	struct iio_dev			*indio_dev;
 	struct completion		completion;
@@ -91,6 +97,7 @@ struct sun4i_gpadc_iio {
 	unsigned int			temp_data_irq;
 	atomic_t			ignore_temp_data_irq;
 	const struct gpadc_data		*data;
+	bool				use_dt;
 	/* prevents concurrent reads of temperature and ADC */
 	struct mutex			mutex;
 };
@@ -125,14 +132,31 @@ static const struct iio_chan_spec sun4i_gpadc_channels[] = {
 	},
 };
 
+static const struct iio_chan_spec sun8i_gpadc_channels[] = {
+	{
+		.type = IIO_TEMP,
+		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW) |
+				      BIT(IIO_CHAN_INFO_SCALE) |
+				      BIT(IIO_CHAN_INFO_OFFSET),
+		.datasheet_name = "temp_adc",
+	},
+};
+
+static const struct regmap_config sun4i_gpadc_regmap_config = {
+        .reg_bits = 32,
+        .val_bits = 32,
+        .reg_stride = 4,
+        .fast_io = true,
+};
+
 static int sun4i_gpadc_read(struct iio_dev *indio_dev, int channel, int *val,
 			    unsigned int irq)
 {
 	struct sun4i_gpadc_iio *info = iio_priv(indio_dev);
 	int ret = 0;
 
-	pm_runtime_get_sync(indio_dev->dev.parent);
 	mutex_lock(&info->mutex);
+	pm_runtime_get_sync(indio_dev->dev.parent);
 
 	reinit_completion(&info->completion);
 
@@ -140,7 +164,7 @@ static int sun4i_gpadc_read(struct iio_dev *indio_dev, int channel, int *val,
 			   SUN4I_GPADC_INT_FIFOC_TP_FIFO_TRIG_LEVEL(1) |
 			   SUN4I_GPADC_INT_FIFOC_TP_FIFO_FLUSH);
 	if (ret)
-		return ret;
+		goto err;
 
 	if (irq == info->fifo_data_irq) {
 		ret = regmap_write(info->regmap, SUN4I_GPADC_CTRL1,
@@ -157,10 +181,20 @@ static int sun4i_gpadc_read(struct iio_dev *indio_dev, int channel, int *val,
 	}
 
 	if (ret)
-		return ret;
+		goto err;
 
 	enable_irq(irq);
 
+	/* FIXME: add timeout to invalidate values */
+	/*
+	 * The temperature sensor throws periodically an interrupt. It is
+	 * possible to read the temperature from sysfs but the thermal framework
+	 * does also regular polling. If a sysfs read and thermal framework's
+	 * polling happen during the same period, one will timeout whereas there
+	 * is a temerature value that has been gotten.
+	 * Using cached value avoids ugly messages sent by the thermal framework
+	 * to notify the user of a timeout while getting the temperature value.
+	 */
 	if (!wait_for_completion_timeout(&info->completion,
 					 msecs_to_jiffies(100))) {
 		if ((irq == info->fifo_data_irq && info->adc_data == -1) ||
@@ -177,12 +211,12 @@ static int sun4i_gpadc_read(struct iio_dev *indio_dev, int channel, int *val,
 
 	ret = 0;
 
+	pm_runtime_mark_last_busy(indio_dev->dev.parent);
 out:
 	disable_irq(irq);
-	mutex_unlock(&info->mutex);
-	pm_runtime_mark_last_busy(indio_dev->dev.parent);
+err:
 	pm_runtime_put_autosuspend(indio_dev->dev.parent);
-
+	mutex_unlock(&info->mutex);
 	return ret;
 }
 
@@ -224,6 +258,7 @@ static int sun4i_gpadc_read_raw(struct iio_dev *indio_dev,
 				int *val2, long mask)
 {
 	int ret;
+	struct sun4i_gpadc_iio *info = iio_priv(indio_dev);
 
 	switch (mask) {
 	case IIO_CHAN_INFO_OFFSET:
@@ -236,8 +271,16 @@ static int sun4i_gpadc_read_raw(struct iio_dev *indio_dev,
 		if (chan->type == IIO_VOLTAGE)
 			ret = sun4i_gpadc_adc_read(indio_dev, chan->channel,
 						   val);
-		else
-			ret = sun4i_gpadc_temp_read(indio_dev, val);
+		else {
+			if (info->use_dt) {
+				pm_runtime_get_sync(indio_dev->dev.parent);
+				ret = regmap_read(info->regmap, SUN4I_GPADC_TEMP_DATA, val);
+				pm_runtime_mark_last_busy(indio_dev->dev.parent);
+				pm_runtime_put_autosuspend(indio_dev->dev.parent);
+			} else {
+				ret = sun4i_gpadc_temp_read(indio_dev, val);
+			}
+		}
 
 		if (ret)
 			return ret;
@@ -266,11 +309,14 @@ static irqreturn_t sun4i_gpadc_temp_data_irq_handler(int irq, void *dev_id)
 	struct sun4i_gpadc_iio *info = dev_id;
 
 	if (atomic_read(&info->ignore_temp_data_irq))
-		return IRQ_HANDLED;
+		goto out;
 
+	/* FIXME: spinlock when reading and writing temp_data */
 	if (!regmap_read(info->regmap, SUN4I_GPADC_TEMP_DATA, &info->temp_data))
+		/* FIXME: disable irq when not in buffer mdoe */
 		complete(&info->completion);
 
+out:
 	return IRQ_HANDLED;
 }
 
@@ -350,7 +396,7 @@ static int sun4i_irq_init(struct platform_device *pdev, const char *name,
 			  unsigned int *irq, atomic_t *atomic)
 {
 	int ret;
-	struct sun4i_gpadc_dev *mfd_dev = dev_get_drvdata(pdev->dev.parent);
+	struct sun4i_gpadc_dev *mfd_dev;
 	struct sun4i_gpadc_iio *info = iio_priv(dev_get_drvdata(&pdev->dev));
 
 	/*
@@ -367,9 +413,12 @@ static int sun4i_irq_init(struct platform_device *pdev, const char *name,
 	 */
 	atomic_set(atomic, 1);
 
+	mfd_dev = dev_get_drvdata(pdev->dev.parent);
+
 	*irq = platform_get_irq_byname(pdev, name);
 	if (*irq < 0) {
-		dev_err(&pdev->dev, "no %s interrupt registered\n", name);
+		dev_err(&pdev->dev, "no %s interrupt registered\n",
+			name);
 		return *irq;
 	}
 
@@ -388,6 +437,14 @@ static int sun4i_irq_init(struct platform_device *pdev, const char *name,
 	return 0;
 }
 
+static const struct of_device_id sun4i_gpadc_of_id[] = {
+	{
+		.compatible = "allwinner,sun8i-a33-gpadc-iio",
+		.data = &sun8i_gpadc_data,
+	},
+	{ /* sentinel */ }
+};
+
 static int sun4i_gpadc_probe(struct platform_device *pdev)
 {
 	struct sun4i_gpadc_iio *info;
@@ -395,8 +452,9 @@ static int sun4i_gpadc_probe(struct platform_device *pdev)
 	int ret;
 	struct sun4i_gpadc_dev *sun4i_gpadc_dev;
 	struct thermal_zone_device *tzd;
-
-	sun4i_gpadc_dev = dev_get_drvdata(pdev->dev.parent);
+	const struct of_device_id *of_dev;
+	struct resource *mem;
+	void __iomem *base;
 
 	indio_dev = devm_iio_device_alloc(&pdev->dev, sizeof(*info));
 	if (!indio_dev)
@@ -406,7 +464,6 @@ static int sun4i_gpadc_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, indio_dev);
 
 	mutex_init(&info->mutex);
-	info->regmap = sun4i_gpadc_dev->regmap;
 	info->indio_dev = indio_dev;
 	info->temp_data = -1;
 	info->adc_data = -1;
@@ -416,30 +473,93 @@ static int sun4i_gpadc_probe(struct platform_device *pdev)
 	indio_dev->dev.of_node = pdev->dev.of_node;
 	indio_dev->info = &sun4i_gpadc_iio_info;
 	indio_dev->modes = INDIO_DIRECT_MODE;
-	indio_dev->num_channels = ARRAY_SIZE(sun4i_gpadc_channels);
-	indio_dev->channels = sun4i_gpadc_channels;
 
-	info->data = (struct gpadc_data *)platform_get_device_id(pdev)->driver_data;
+	if (pdev->dev.of_node) {
+		of_dev = of_match_device(sun4i_gpadc_of_id, &pdev->dev);
+		if (!of_dev)
+			return -ENODEV;
 
-	/*
-	 * This driver is a child of an MFD which has a node in the DT but not
-	 * its children. Therefore, the resulting devices of this driver do not
-	 * have an of_node variable.
-	 * However, its parent (the MFD driver) has an of_node variable and
-	 * since devm_thermal_zone_of_sensor_register uses its first argument to
-	 * match the phandle defined in the node of the thermal driver with the
-	 * of_node of the device passed as first argument and the third argument
-	 * to call ops from thermal_zone_of_device_ops, the solution is to use
-	 * the parent device as first argument to match the phandle with its
-	 * of_node, and the device from this driver as third argument to return
-	 * the temperature.
-	 */
-	tzd = devm_thermal_zone_of_sensor_register(pdev->dev.parent, 0, info,
-						   &sun4i_ts_tz_ops);
-	if (IS_ERR(tzd)) {
-		dev_err(&pdev->dev, "could not register thermal sensor: %ld\n",
-			PTR_ERR(tzd));
-		return PTR_ERR(tzd);
+		info->use_dt = true;
+		info->data = (struct gpadc_data *)of_dev->data;
+		indio_dev->num_channels = ARRAY_SIZE(sun8i_gpadc_channels);
+		indio_dev->channels = sun8i_gpadc_channels;
+
+		mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+		base = devm_ioremap_resource(&pdev->dev, mem);
+		if (IS_ERR(base))
+			return PTR_ERR(base);
+
+		info->regmap = devm_regmap_init_mmio(&pdev->dev, base,
+						     &sun4i_gpadc_regmap_config);
+		if (IS_ERR(info->regmap)) {
+			ret = PTR_ERR(info->regmap);
+			dev_err(&pdev->dev, "failed to init regmap: %d\n", ret);
+			return ret;
+		}
+
+	/*	tzd = devm_thermal_zone_of_sensor_register(&pdev->dev, 0, info,
+							   &sun4i_ts_tz_ops);
+		if (IS_ERR(tzd)) {
+			dev_err(&pdev->dev,
+				"could not register thermal sensor: %ld\n",
+				PTR_ERR(tzd));
+			return PTR_ERR(tzd);
+		}*/
+
+	} else {
+		info->use_dt = false;
+		sun4i_gpadc_dev = dev_get_drvdata(pdev->dev.parent);
+		info->regmap = sun4i_gpadc_dev->regmap;
+
+		indio_dev->num_channels = ARRAY_SIZE(sun4i_gpadc_channels);
+		indio_dev->channels = sun4i_gpadc_channels;
+
+		info->data = (struct gpadc_data *)platform_get_device_id(pdev)->driver_data;
+
+		/*
+		 * This driver is a child of an MFD which has a node in the DT
+		 * but not its children. Therefore, the resulting devices of
+		 * this driver do not have an of_node variable.
+		 * However, its parent (the MFD driver) has an of_node variable
+		 * and since devm_thermal_zone_of_sensor_register uses its first
+		 * argument to match the phandle defined in the node of the
+		 * thermal driver with the of_node of the device passed as first
+		 * argument and the third argument to call ops from
+		 * thermal_zone_of_device_ops, the solution is to use the parent
+		 * device as first argument to match the phandle with its
+		 * of_node, and the device from this driver as third argument to
+		 * return the temperature.
+		 */
+		tzd = devm_thermal_zone_of_sensor_register(pdev->dev.parent, 0,
+							   info,
+							   &sun4i_ts_tz_ops);
+		if (IS_ERR(tzd)) {
+			dev_err(&pdev->dev,
+				"could not register thermal sensor: %ld\n",
+				PTR_ERR(tzd));
+			return PTR_ERR(tzd);
+		}
+
+		ret = sun4i_irq_init(pdev, "TEMP_DATA_PENDING",
+				     sun4i_gpadc_temp_data_irq_handler,
+				     "temp_data", &info->temp_data_irq,
+				     &info->ignore_temp_data_irq);
+		if (ret < 0)
+			return ret;
+
+		ret = sun4i_irq_init(pdev, "FIFO_DATA_PENDING",
+				     sun4i_gpadc_fifo_data_irq_handler,
+				     "fifo_data", &info->fifo_data_irq,
+				     &info->ignore_fifo_data_irq);
+		if (ret < 0)
+			return ret;
+
+		ret = iio_map_array_register(indio_dev, sun4i_gpadc_hwmon_maps);
+		if (ret < 0) {
+			dev_err(&pdev->dev,
+				"failed to register iio map array\n");
+			return ret;
+		}
 	}
 
 	pm_runtime_set_autosuspend_delay(&pdev->dev,
@@ -447,24 +567,6 @@ static int sun4i_gpadc_probe(struct platform_device *pdev)
 	pm_runtime_use_autosuspend(&pdev->dev);
 	pm_runtime_set_suspended(&pdev->dev);
 	pm_runtime_enable(&pdev->dev);
-
-	ret = sun4i_irq_init(pdev, "TEMP_DATA_PENDING",
-			     sun4i_gpadc_temp_data_irq_handler, "temp_data",
-			     &info->temp_data_irq, &info->ignore_temp_data_irq);
-	if (ret < 0)
-		goto err;
-
-	ret = sun4i_irq_init(pdev, "FIFO_DATA_PENDING",
-			     sun4i_gpadc_fifo_data_irq_handler, "fifo_data",
-			     &info->fifo_data_irq, &info->ignore_fifo_data_irq);
-	if (ret < 0)
-		goto err;
-
-	ret = iio_map_array_register(indio_dev, sun4i_gpadc_hwmon_maps);
-	if (ret < 0) {
-		dev_err(&pdev->dev, "failed to register iio map array\n");
-		goto err;
-	}
 
 	ret = iio_device_register(indio_dev);
 	if (ret < 0) {
@@ -475,9 +577,8 @@ static int sun4i_gpadc_probe(struct platform_device *pdev)
 	return 0;
 
 err_map:
+	//FIXME: what if not registered?
 	iio_map_array_unregister(indio_dev);
-
-err:
 	pm_runtime_put(&pdev->dev);
 	pm_runtime_disable(&pdev->dev);
 
@@ -492,6 +593,7 @@ static int sun4i_gpadc_remove(struct platform_device *pdev)
 	pm_runtime_put(&pdev->dev);
 	pm_runtime_disable(&pdev->dev);
 	info = iio_priv(indio_dev);
+	//FIXME: WHAT if not registered
 	iio_map_array_unregister(indio_dev);
 	iio_device_unregister(indio_dev);
 
@@ -508,6 +610,7 @@ static const struct platform_device_id sun4i_gpadc_id[] = {
 static struct platform_driver sun4i_gpadc_driver = {
 	.driver = {
 		.name = "sun4i-gpadc-iio",
+		.of_match_table = sun4i_gpadc_of_id,
 		.pm = &sun4i_gpadc_pm_ops,
 	},
 	.id_table = sun4i_gpadc_id,

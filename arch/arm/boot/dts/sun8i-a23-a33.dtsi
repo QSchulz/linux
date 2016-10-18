@@ -84,10 +84,21 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		cpu@0 {
+		cpu0: cpu@0 {
 			compatible = "arm,cortex-a7";
 			device_type = "cpu";
 			reg = <0>;
+			operating-points = <
+				/* kHz	  uV */
+				1344000	1460000
+				1200000	1320000
+				1008000	1200000
+				816000	1100000
+				648000	1040000
+				>;
+			cooling-min-level = <0>;
+			cooling-max-level = <4>;
+			#cooling-cells = <3>;
 		};
 
 		cpu@1 {
