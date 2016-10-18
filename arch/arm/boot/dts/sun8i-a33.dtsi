@@ -43,6 +43,7 @@
  */
 
 #include "sun8i-a23-a33.dtsi"
+#include <dt-bindings/thermal/thermal.h>
 
 / {
 	cpus {
@@ -58,6 +59,38 @@
 			reg = <3>;
 		};
 	};
+
+        thermal-zones {
+                cpu_thermal {
+                        /* milliseconds */
+                        polling-delay-passive = <250>;
+                        polling-delay = <1000>;
+                        thermal-sensors = <&rtp>;
+
+                        cooling-maps {
+                                map0 {
+                                        trip = <&cpu_alert0>;
+                                        cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+                                };
+                        };
+
+                        trips {
+                                cpu_alert0: cpu_alert0 {
+                                        /* milliCelsius */
+                                        temperature = <70000>;
+                                        hysteresis = <2000>;
+                                        type = "passive";
+                                };
+
+                                cpu_crit: cpu_crit {
+                                        /* milliCelsius */
+                                        temperature = <100000>;
+                                        hysteresis = <2000>;
+                                        type = "critical";
+                                };
+                        };
+                };
+        };
 
 	memory {
 		reg = <0x40000000 0x80000000>;
@@ -157,6 +190,20 @@
 			status = "disabled";
 			#phy-cells = <1>;
 		};
+
+		rtp: rtp@01c25000 {
+			compatible = "allwinner,sun8i-a33-gpadc-iio";
+			reg = <0x01c25000 0x100>;
+			interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
+//FIXME: Add thermal zone node
+			#thermal-sensor-cells = <0>;
+			#io-channel-cells = <0>;
+		};
+	};
+
+	iio-hwmon {
+		compatible = "iio-hwmon";
+		io-channels = <&rtp>;
 	};
 };
 
