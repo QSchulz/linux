@@ -83,7 +83,7 @@ static const struct gpadc_data sun6i_gpadc_data = {
 static const struct gpadc_data sun8i_gpadc_data = {
 	.temp_offset = -1665,
 	.temp_scale = 162,
-	.tp_mode_en = SUN4I_GPADC_CTRL1_TP_MODE_EN,
+	.tp_mode_en = 0x100,
 };
 
 struct sun4i_gpadc_iio {
@@ -155,8 +155,7 @@ static void sun4i_disable_irq(struct sun4i_gpadc_iio *info, unsigned int irq)
 		disable_irq(irq);
 	else
 		regmap_update_bits(info->regmap, SUN4I_GPADC_INT_FIFOC,
-				   SUN4I_GPADC_INT_FIFOC_TEMP_IRQ_EN,
-				   0);
+				   SUN4I_GPADC_INT_FIFOC_TEMP_IRQ_EN, 0);
 }
 
 static void sun4i_enable_irq(struct sun4i_gpadc_iio *info, unsigned int irq)
@@ -175,8 +174,8 @@ static int sun4i_gpadc_read(struct iio_dev *indio_dev, int channel, int *val,
 	struct sun4i_gpadc_iio *info = iio_priv(indio_dev);
 	int ret = 0;
 
-	pm_runtime_get_sync(indio_dev->dev.parent);
 	mutex_lock(&info->mutex);
+	pm_runtime_get_sync(indio_dev->dev.parent);
 
 	reinit_completion(&info->completion);
 
@@ -184,7 +183,7 @@ static int sun4i_gpadc_read(struct iio_dev *indio_dev, int channel, int *val,
 			   SUN4I_GPADC_INT_FIFOC_TP_FIFO_TRIG_LEVEL(1) |
 			   SUN4I_GPADC_INT_FIFOC_TP_FIFO_FLUSH);
 	if (ret)
-		return ret;
+		goto err;
 
 	if (irq == info->fifo_data_irq) {
 		ret = regmap_write(info->regmap, SUN4I_GPADC_CTRL1,
@@ -201,12 +200,12 @@ static int sun4i_gpadc_read(struct iio_dev *indio_dev, int channel, int *val,
 	}
 
 	if (ret)
-		return ret;
+		goto err;
 
 	sun4i_enable_irq(info, irq);
 
 	if (!wait_for_completion_timeout(&info->completion,
-					 msecs_to_jiffies(1000))) {
+					 msecs_to_jiffies(100))) {
 		if ((irq == info->fifo_data_irq && info->adc_data == -1) ||
 		    (irq == info->temp_data_irq && info->temp_data == -1)) {
 			ret = -ETIMEDOUT;
@@ -223,9 +222,10 @@ static int sun4i_gpadc_read(struct iio_dev *indio_dev, int channel, int *val,
 
 out:
 	sun4i_disable_irq(info, irq);
-	mutex_unlock(&info->mutex);
 	pm_runtime_mark_last_busy(indio_dev->dev.parent);
 	pm_runtime_put_autosuspend(indio_dev->dev.parent);
+err:
+	mutex_unlock(&info->mutex);
 
 	return ret;
 }
@@ -353,18 +353,18 @@ static int sun4i_gpadc_runtime_resume(struct device *dev)
 	struct sun4i_gpadc_iio *info = iio_priv(dev_get_drvdata(dev));
 
 	/* clkin = 6MHz */
-	regmap_write(info->regmap, SUN4I_GPADC_CTRL0,
+	regmap_write(info->regmap, SUN4I_GPADC_CTRL0, 0x002000ff);/*
 		     SUN4I_GPADC_CTRL0_ADC_CLK_DIVIDER(2) |
 		     SUN4I_GPADC_CTRL0_FS_DIV(7) |
-		     SUN4I_GPADC_CTRL0_T_ACQ(63));
+		     SUN4I_GPADC_CTRL0_T_ACQ(63));*/
 	regmap_write(info->regmap, SUN4I_GPADC_CTRL1, info->data->tp_mode_en);
-	regmap_write(info->regmap, SUN4I_GPADC_CTRL3,
+/*	regmap_write(info->regmap, SUN4I_GPADC_CTRL3,
 		     SUN4I_GPADC_CTRL3_FILTER_EN |
-		     SUN4I_GPADC_CTRL3_FILTER_TYPE(1));
+		     SUN4I_GPADC_CTRL3_FILTER_TYPE(1));*/
 	/* period = SUN4I_GPADC_TPR_TEMP_PERIOD * 256 * 16 / clkin; ~1.3s */
-	regmap_write(info->regmap, SUN4I_GPADC_TPR,
+	regmap_write(info->regmap, SUN4I_GPADC_TPR, 0x1005f);/*
 		     SUN4I_GPADC_TPR_TEMP_ENABLE |
-		     SUN4I_GPADC_TPR_TEMP_PERIOD(1953));
+		     SUN4I_GPADC_TPR_TEMP_PERIOD(1953));*/
 
 	return 0;
 }
