@@ -742,6 +742,13 @@ static struct ccu_reset_map sun8i_a33_ccu_resets[] = {
 	[RST_BUS_UART4]		=  { 0x2d8, BIT(20) },
 };
 
+static struct ccu_mux_nb sun8i_a33_cpu_nb = {
+	.common		= &cpux_clk.common,
+	.cm		= &cpux_clk.mux,
+	.delay_us	= 1,
+	.bypass_index	= 1,
+};
+
 static const struct sunxi_ccu_desc sun8i_a33_ccu_desc = {
 	.ccu_clks	= sun8i_a33_ccu_clks,
 	.num_ccu_clks	= ARRAY_SIZE(sun8i_a33_ccu_clks),
@@ -775,6 +782,9 @@ static void __init sun8i_a33_ccu_setup(struct device_node *node)
 	writel(val, reg + SUN8I_A33_PLL_MIPI_REG);
 
 	sunxi_ccu_probe(node, reg, &sun8i_a33_ccu_desc);
+
+	ccu_mux_notifier_register(pll_cpux_clk.common.hw.clk,
+				  &sun8i_a33_cpu_nb);
 }
 CLK_OF_DECLARE(sun8i_a33_ccu, "allwinner,sun8i-a33-ccu",
 	       sun8i_a33_ccu_setup);
