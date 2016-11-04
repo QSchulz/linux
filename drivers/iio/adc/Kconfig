@@ -437,16 +437,23 @@ config STX104
 config SUN4I_GPADC
 	tristate "Support for the Allwinner SoCs GPADC"
 	depends on IIO
-	depends on MFD_SUN4I_GPADC
+# MFD_SUN4I_GPADC is needed for sun4i, sun5i and sun6i but not for sun8i
+	select MFD_SUN4I_GPADC if MACH_SUN4I || MACH_SUN5I || MACH_SUN6I
+# THERMAL_OF can be disabled on sun4i, sun5i and sun6i to quicken ADC readings
+	depends on THERMAL_OF || MACH_SUN4I || MACH_SUN5I || MACH_SUN6I
 	depends on !TOUCHSCREEN_SUN4I
 	help
-	  Say yes here to build support for Allwinner (A10, A13 and A31) SoCs
-	  GPADC. This ADC provides 4 channels which can be used as an ADC or as
-	  a touchscreen input and one channel for thermal sensor.
+	  Say yes here to build support for Allwinner (A10, A13, A31 and A33)
+	  SoCs GPADC.
+
+	  The ADC on A10, A13 and A31 provides 4 channels which can be used as
+	  an ADC or as a touchscreen input and one channel for thermal sensor.
 
 	  The thermal sensor is activated by default but slows down ADC
 	  readings. You can disable CONFIG_THERMAL_OF to disable the CPU thermal
 	  sensor if you want faster ADC readings.
+
+	  The ADC on A33 provides one channel for thermal sensor.
 
 	  To compile this driver as a module, choose M here: the module will be
 	  called sun4i-gpadc-iio.
