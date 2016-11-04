@@ -46,16 +46,18 @@
 
 / {
 	cpus {
-		cpu@2 {
+		cpu2: cpu@2 {
 			compatible = "arm,cortex-a7";
 			device_type = "cpu";
 			reg = <2>;
+			clocks = <&ccu CLK_CPUX>;
 		};
 
-		cpu@3 {
+		cpu3: cpu@3 {
 			compatible = "arm,cortex-a7";
 			device_type = "cpu";
 			reg = <3>;
+			clocks = <&ccu CLK_CPUX>;
 		};
 	};
 
@@ -230,6 +232,49 @@
 
 &ccu {
 	compatible = "allwinner,sun8i-a33-ccu";
+};
+
+&cpu0 {
+	clock-latency = <244144>; /* 8 32k periods */
+	operating-points = <
+		/* kHz    uV */
+		1200000 1320000
+		1104000 1320000
+		1008000 1200000
+		912000	1200000
+		816000  1100000
+		720000	1100000
+		648000  1040000
+		600000	1040000
+		504000	1040000
+		480000	1040000
+		408000	1040000
+		312000	1040000
+		240000	1040000
+		120000	1040000
+		60000	1040000
+		>;
+	cooling-min-level = <0>;
+	cooling-max-level = <14>;
+	#cooling-cells = <2>;
+};
+
+&cpu1 {
+	cooling-min-level = <0>;
+	cooling-max-level = <14>;
+	#cooling-cells = <2>;
+};
+
+&cpu2 {
+	cooling-min-level = <0>;
+	cooling-max-level = <14>;
+	#cooling-cells = <2>;
+};
+
+&cpu3 {
+	cooling-min-level = <0>;
+	cooling-max-level = <14>;
+	#cooling-cells = <2>;
 };
 
 &pio {
