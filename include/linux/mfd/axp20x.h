@@ -150,6 +150,10 @@ enum {
 #define AXP20X_VBUS_I_ADC_L		0x5d
 #define AXP20X_TEMP_ADC_H		0x5e
 #define AXP20X_TEMP_ADC_L		0x5f
+
+#define AXP22X_TEMP_ADC_H		0x56
+#define AXP22X_TEMP_ADC_L		0x57
+
 #define AXP20X_TS_IN_H			0x62
 #define AXP20X_TS_IN_L			0x63
 #define AXP20X_GPIO0_V_ADC_H		0x64
