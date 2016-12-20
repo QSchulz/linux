@@ -52,6 +52,10 @@
 	interrupt-controller;
 	#interrupt-cells = <1>;
 
+	axp221_adc: adc {
+		compatible = "x-powers,axp221-adc";
+	};
+
 	regulators {
 		/* Default work frequency for buck regulators */
 		x-powers,dcdc-freq = <3000>;
