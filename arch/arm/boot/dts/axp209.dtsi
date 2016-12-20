@@ -53,6 +53,13 @@
 	interrupt-controller;
 	#interrupt-cells = <1>;
 
+	ac_power_supply: ac_power_supply {
+		compatible = "x-powers,axp202-ac-power-supply";
+		io-channels = <&axp209_adc 0>, <&axp209_adc 1>;
+		io-channel-names = "acin_v", "acin_i";
+		status = "disabled";
+	};
+
 	axp209_adc: axp209_adc {
 		compatible = "x-powers,axp209-adc";
 		#io-channel-cells = <1>;
