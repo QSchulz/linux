@@ -71,6 +71,13 @@
 		#gpio-cells = <2>;
 	};
 
+	battery_power_supply: battery_power_supply {
+		compatible = "x-powers,axp209-battery-power-supply";
+		io-channels = <&axp209_adc 7>, <&axp209_adc 8>, <&axp209_adc 9>;
+		io-channel-names = "batt_v", "batt_chrg_i", "batt_dischrg_i";
+		status = "disabled";
+	};
+
 	regulators {
 		/* Default work frequency for buck regulators */
 		x-powers,dcdc-freq = <1500>;
