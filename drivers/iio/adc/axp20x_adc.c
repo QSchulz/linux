@@ -112,6 +112,34 @@ static struct iio_map axp20x_maps[] = {
 		.consumer_dev_name = "axp20x-ac-power-supply",
 		.consumer_channel = "acin_i",
 		.adc_channel_label = "acin_i",
+	}, {
+		.consumer_dev_name = "axp20x-battery-power-supply",
+		.consumer_channel = "batt_v",
+		.adc_channel_label = "batt_v",
+	}, {
+		.consumer_dev_name = "axp20x-battery-power-supply",
+		.consumer_channel = "batt_chrg_i",
+		.adc_channel_label = "batt_chrg_i",
+	}, {
+		.consumer_dev_name = "axp20x-battery-power-supply",
+		.consumer_channel = "batt_dischrg_i",
+		.adc_channel_label = "batt_dischrg_i",
+	}, { /* sentinel */ }
+};
+
+static struct iio_map axp22x_maps[] = {
+	{
+		.consumer_dev_name = "axp20x-battery-power-supply",
+		.consumer_channel = "batt_v",
+		.adc_channel_label = "batt_v",
+	}, {
+		.consumer_dev_name = "axp20x-battery-power-supply",
+		.consumer_channel = "batt_chrg_i",
+		.adc_channel_label = "batt_chrg_i",
+	}, {
+		.consumer_dev_name = "axp20x-battery-power-supply",
+		.consumer_channel = "batt_dischrg_i",
+		.adc_channel_label = "batt_dischrg_i",
 	}, { /* sentinel */ }
 };
 
@@ -479,6 +507,7 @@ static const struct axp_data axp22x_data = {
 	.adc_en1_mask = AXP22X_ADC_EN1_MASK,
 	.adc_rate = axp22x_adc_rate,
 	.adc_en2 = false,
+	.maps = axp22x_maps,
 };
 
 static const struct of_device_id axp20x_adc_of_match[] = {
