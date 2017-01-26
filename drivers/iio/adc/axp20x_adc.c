@@ -104,6 +104,14 @@ static struct iio_map axp20x_maps[] = {
 		.consumer_dev_name = "axp20x-usb-power-supply",
 		.consumer_channel = "vbus_i",
 		.adc_channel_label = "vbus_i",
+	}, {
+		.consumer_dev_name = "axp20x-ac-power-supply",
+		.consumer_channel = "acin_v",
+		.adc_channel_label = "acin_v",
+	}, {
+		.consumer_dev_name = "axp20x-ac-power-supply",
+		.consumer_channel = "acin_i",
+		.adc_channel_label = "acin_i",
 	}, { /* sentinel */ }
 };
 
