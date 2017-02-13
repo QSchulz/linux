@@ -7,6 +7,7 @@ Optional Properties:
  - voltage-min-design-microvolt: drained battery voltage
  - energy-full-design-microwatt-hours: battery design energy
  - charge-full-design-microamp-hours: battery design capacity
+ - constant-charge-current-microamp: battery constant charge current
 
 Future Properties must be named for the corresponding elements in
 enum power_supply_property, defined in include/linux/power_supply.h.
@@ -22,6 +23,7 @@ Example:
 		voltage-min-design-microvolt = <3200000>;
 		energy-full-design-microwatt-hours = <5290000>;
 		charge-full-design-microamp-hours = <1430000>;
+		constant-charge-current-microamp = <300000>;
 	};
 
 	charger: charger@11 {
