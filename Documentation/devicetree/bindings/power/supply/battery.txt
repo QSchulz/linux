@@ -7,6 +7,7 @@ Optional Properties:
  - voltage-min-design-microvolt: drained battery voltage
  - energy-full-design-microwatt-hours: battery design energy
  - charge-full-design-microamp-hours: battery design capacity
+ - constant-charge-microamp: battery constant charge current
 
 Because drivers surface properties in sysfs using names derived
 from enum power_supply_property, e.g.
@@ -30,6 +31,7 @@ Example:
 		voltage-min-design-microvolt = <3200000>;
 		energy-full-design-microwatt-hours = <5290000>;
 		charge-full-design-microamp-hours = <1430000>;
+		constant-charge-microamp = <300000>;
 	};
 
 	charger: charger@11 {
