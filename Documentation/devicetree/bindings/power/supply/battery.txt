@@ -1,0 +1,45 @@
+Battery Characteristics
+
+Required Properties:
+ - compatible: Must be "fixed-battery"
+
+Optional Properties:
+ - voltage-min-design-microvolt: drained battery voltage
+ - energy-full-design-microwatt-hours: battery design energy
+ - charge-full-design-microamp-hours: battery design capacity
+
+Because drivers surface properties in sysfs using names derived
+from enum power_supply_property, e.g.
+/sys/class/power_supply/<device>/charge_full_design, our
+battery properties must be named for the corresponding elements in
+enum power_supply_property, defined in include/linux/power_supply.h.
+
+Batteries must be referenced by chargers and/or fuel-gauges
+using a phandle. The phandle's property should be named
+"monitored-battery".
+
+Driver code should call power_supply_get_battery_info() to obtain
+battery properties via monitored-battery. For details see:
+  drivers/power/supply/power_supply_core.c
+  drivers/power/supply/bq27xxx_battery.c
+
+Example:
+
+	bat: battery {
+		compatible = "fixed-battery";
+		voltage-min-design-microvolt = <3200000>;
+		energy-full-design-microwatt-hours = <5290000>;
+		charge-full-design-microamp-hours = <1430000>;
+	};
+
+	charger: charger@11 {
+		....
+		monitored-battery = <&bat>;
+		...
+	};
+
+	fuel_gauge: fuel-gauge@22 {
+		....
+		monitored-battery = <&bat>;
+		...
+	};
