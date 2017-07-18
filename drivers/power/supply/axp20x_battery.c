@@ -46,6 +46,8 @@
 #define AXP20X_CHRG_CTRL1_TGT_4_2V	(2 << 5)
 #define AXP20X_CHRG_CTRL1_TGT_4_36V	(3 << 5)
 
+#define AXP813_CHRG_CTRL1_TGT_4_35V	(3 << 5)
+
 #define AXP22X_CHRG_CTRL1_TGT_4_22V	(1 << 5)
 #define AXP22X_CHRG_CTRL1_TGT_4_24V	(3 << 5)
 
@@ -123,10 +125,41 @@ static int axp22x_battery_get_max_voltage(struct axp20x_batt_ps *axp20x_batt,
 	return 0;
 }
 
+static int axp813_battery_get_max_voltage(struct axp20x_batt_ps *axp20x_batt,
+					  int *val)
+{
+	int ret, reg;
+
+	ret = regmap_read(axp20x_batt->regmap, AXP20X_CHRG_CTRL1, &reg);
+	if (ret)
+		return ret;
+
+	switch (reg & AXP20X_CHRG_CTRL1_TGT_VOLT) {
+	case AXP20X_CHRG_CTRL1_TGT_4_1V:
+		*val = 4100000;
+		break;
+	case AXP20X_CHRG_CTRL1_TGT_4_15V:
+		*val = 4150000;
+		break;
+	case AXP20X_CHRG_CTRL1_TGT_4_2V:
+		*val = 4200000;
+		break;
+	case AXP813_CHRG_CTRL1_TGT_4_35V:
+		*val = 4350000;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static void raw_to_constant_charge_current(struct axp20x_batt_ps *axp, int *val)
 {
 	if (axp->axp_id == AXP209_ID)
 		*val = *val * 100000 + 300000;
+	else if (axp->axp_id == AXP813_ID)
+		*val = *val * 200000 + 200000;
 	else
 		*val = *val * 150000 + 300000;
 }
@@ -135,6 +168,8 @@ static void constant_charge_current_to_raw(struct axp20x_batt_ps *axp, int *val)
 {
 	if (axp->axp_id == AXP209_ID)
 		*val = (*val - 300000) / 100000;
+	else if (axp->axp_id == AXP813_ID)
+		*val = (*val - 200000) / 200000;
 	else
 		*val = (*val - 300000) / 150000;
 }
@@ -269,7 +304,8 @@ static int axp20x_battery_get_prop(struct power_supply *psy,
 		if (ret)
 			return ret;
 
-		if (axp20x_batt->axp_id == AXP221_ID &&
+		if ((axp20x_batt->axp_id == AXP221_ID ||
+		     axp20x_batt->axp_id == AXP813_ID) &&
 		    !(reg & AXP22X_FG_VALID))
 			return -EINVAL;
 
@@ -283,6 +319,9 @@ static int axp20x_battery_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN:
 		if (axp20x_batt->axp_id == AXP209_ID)
 			return axp20x_battery_get_max_voltage(axp20x_batt,
+							      &val->intval);
+		else if (axp20x_batt->axp_id == AXP813_ID)
+			return axp813_battery_get_max_voltage(axp20x_batt,
 							      &val->intval);
 		return axp22x_battery_get_max_voltage(axp20x_batt,
 						      &val->intval);
@@ -467,6 +506,9 @@ static const struct of_device_id axp20x_battery_ps_id[] = {
 	}, {
 		.compatible = "x-powers,axp221-battery-power-supply",
 		.data = (void *)AXP221_ID,
+	}, {
+		.compatible = "x-powers,axp813-battery-power-supply",
+		.data = (void *)AXP813_ID,
 	}, { /* sentinel */ },
 };
 MODULE_DEVICE_TABLE(of, axp20x_battery_ps_id);
