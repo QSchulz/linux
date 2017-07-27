@@ -4,7 +4,9 @@ This driver follows the usual GPIO bindings found in
 Documentation/devicetree/bindings/gpio/gpio.txt
 
 Required properties:
-- compatible: Should be "x-powers,axp209-gpio"
+- compatible: Should be one of:
+	- "x-powers,axp209-gpio"
+	- "x-powers,axp813-gpio"
 - #gpio-cells: Should be two. The first cell is the pin number and the
   second is the GPIO flags.
 - gpio-controller: Marks the device node as a GPIO controller.
@@ -49,8 +51,17 @@ Example:
 GPIOs and their functions
 -------------------------
 
+axp209
+------
 GPIO	|	Functions
 ------------------------
 GPIO0	|	gpio_in, gpio_out, ldo, adc
 GPIO1	|	gpio_in, gpio_out, ldo, adc
 GPIO2	|	gpio_in, gpio_out
+
+axp813
+------
+GPIO	|	Functions
+------------------------
+GPIO0	|	gpio_in, gpio_out, ldo, adc
+GPIO1	|	gpio_in, gpio_out, ldo

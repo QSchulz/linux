@@ -19,6 +19,7 @@
 #include <linux/mfd/axp20x.h>
 #include <linux/module.h>
 #include <linux/of.h>
+#include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
 #include <linux/slab.h>
@@ -64,12 +65,25 @@ static const struct pinctrl_pin_desc axp209_pins[] = {
 	PINCTRL_PIN(2, "GPIO2"),
 };
 
+static const struct pinctrl_pin_desc axp813_pins[] = {
+	PINCTRL_PIN(0, "GPIO0"),
+	PINCTRL_PIN(1, "GPIO1"),
+};
+
 static const struct axp20x_pinctrl_desc axp20x_data = {
 	.pins	= axp209_pins,
 	.npins	= ARRAY_SIZE(axp209_pins),
 	.ldo_mask = BIT(0) | BIT(1),
 	.adc_mask = BIT(0) | BIT(1),
 	.gpio_status_offset = 4,
+};
+
+static const struct axp20x_pinctrl_desc axp813_data = {
+	.pins	= axp813_pins,
+	.npins	= ARRAY_SIZE(axp813_pins),
+	.ldo_mask = BIT(0) | BIT(1),
+	.adc_mask = BIT(0),
+	.gpio_status_offset = 0,
 };
 
 static int axp20x_gpio_get_reg(unsigned offset)
@@ -337,6 +351,13 @@ static void axp20x_build_funcs_groups(struct platform_device *pdev)
 				      pctl->desc->pins);
 }
 
+static const struct of_device_id axp20x_pctl_match[] = {
+	{ .compatible = "x-powers,axp209-gpio", .data = &axp20x_data, },
+	{ .compatible = "x-powers,axp813-gpio", .data = &axp813_data, },
+	{ }
+};
+MODULE_DEVICE_TABLE(of, axp20x_pctl_match);
+
 static int axp20x_pctl_probe(struct platform_device *pdev)
 {
 	struct axp20x_dev *axp20x = dev_get_drvdata(pdev->dev.parent);
@@ -370,7 +391,7 @@ static int axp20x_pctl_probe(struct platform_device *pdev)
 	pctl->chip.direction_output	= axp20x_gpio_output;
 	pctl->chip.ngpio		= 3;
 
-	pctl->desc = &axp20x_data;
+	pctl->desc = (struct axp20x_pinctrl_desc *)of_device_get_match_data(&pdev->dev);
 
 	pctl->regmap = axp20x->regmap;
 
@@ -416,12 +437,6 @@ static int axp20x_pctl_probe(struct platform_device *pdev)
 
 	return 0;
 }
-
-static const struct of_device_id axp20x_pctl_match[] = {
-	{ .compatible = "x-powers,axp209-gpio" },
-	{ }
-};
-MODULE_DEVICE_TABLE(of, axp20x_pctl_match);
 
 static struct platform_driver axp20x_pctl_driver = {
 	.probe		= axp20x_pctl_probe,
