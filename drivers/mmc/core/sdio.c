@@ -1038,7 +1038,7 @@ static int mmc_sdio_runtime_resume(struct mmc_host *host)
 	return ret;
 }
 
-static int mmc_sdio_reset(struct mmc_host *host)
+static int mmc_sdio_hw_reset(struct mmc_host *host)
 {
 	mmc_power_cycle(host, host->card->ocr);
 	return mmc_sdio_power_restore(host);
@@ -1054,7 +1054,7 @@ static const struct mmc_bus_ops mmc_sdio_ops = {
 	.runtime_resume = mmc_sdio_runtime_resume,
 	.power_restore = mmc_sdio_power_restore,
 	.alive = mmc_sdio_alive,
-	.reset = mmc_sdio_reset,
+	.hw_reset = mmc_sdio_hw_reset,
 };
 
 
