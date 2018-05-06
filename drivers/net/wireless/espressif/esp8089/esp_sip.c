@@ -129,9 +129,9 @@ static bool check_ac_tid(u8 *pkt, u8 ac, u8 tid)
 	return false;
 }
 
-static void sip_recalc_credit_timeout(unsigned long data)
+static void sip_recalc_credit_timeout(struct timer_list *t)
 {
-	struct esp_sip *sip = (struct esp_sip *)data;
+	struct esp_sip *sip = from_timer(sip, t, credit_timer);
 
 	sip_recalc_credit_claim(sip, 1);	/* recalc again */
 }
@@ -140,8 +140,7 @@ static void sip_recalc_credit_init(struct esp_sip *sip)
 {
 	atomic_set(&sip->credit_status, RECALC_CREDIT_DISABLE);	//set it disable
 
-	setup_timer(&sip->credit_timer, sip_recalc_credit_timeout,
-		    (unsigned long)sip);
+	timer_setup(&sip->credit_timer, sip_recalc_credit_timeout, 0);
 }
 
 static int sip_recalc_credit_claim(struct esp_sip *sip, int force)
@@ -1649,14 +1648,11 @@ int sip_poll_bootup_event(struct esp_sip *sip)
 /* FIXME: always returning 0 ? */
 int sip_poll_resetting_event(struct esp_sip *sip)
 {
-	unsigned int ret;
-
-	if (gl_bootup_cplx)
-		ret = wait_for_completion_timeout(gl_bootup_cplx, 10 * HZ);
-
-	if (!ret) {
-		dev_err(sip->epub->dev, "resetting event timeout\n");
-		return -ETIMEDOUT;
+	if (gl_bootup_cplx) {
+		if (!wait_for_completion_timeout(gl_bootup_cplx, 10 * HZ)) {
+			dev_err(sip->epub->dev, "resetting event timeout\n");
+			return -ETIMEDOUT;
+		}
 	}
 
 	return 0;

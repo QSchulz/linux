@@ -461,10 +461,10 @@ static void esp_sdio_remove(struct sdio_func *func);
 static int esp_sdio_probe(struct sdio_func *func,
 			  const struct sdio_device_id *id)
 {
-	struct esp_pub *epub;
+	struct esp_pub *epub = NULL;
 	struct esp_sdio_ctrl *sctrl;
 	struct mmc_host *host = func->card->host;
-	int err;
+	int err = 0;
 
 	if (!sif_sctrl) {
 		request_init_conf(&func->dev);
@@ -492,13 +492,6 @@ static int esp_sdio_probe(struct sdio_func *func,
 		epub->sif = (void *)sctrl;
 		epub->sdio_state = ESP_SDIO_STATE_FIRST_INIT;
 		sctrl->epub = epub;
-	} else {
-		sctrl = sif_sctrl;
-		sif_sctrl = NULL;
-		epub = sctrl->epub;
-		epub->sdio_state = ESP_SDIO_STATE_SECOND_INIT;
-		SET_IEEE80211_DEV(epub->hw, &func->dev);
-		epub->dev = &func->dev;
 	}
 
 	sctrl->func = func;
@@ -511,10 +504,7 @@ static int esp_sdio_probe(struct sdio_func *func,
 
 	err = esdio_power_on(sctrl);
 	if (err) {
-		if (epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT)
-			goto _err_ext_gpio;
-
-		goto _err_second_init;
+		goto _err_ext_gpio;
 	}
 
 	check_target_id(epub);
@@ -527,9 +517,57 @@ static int esp_sdio_probe(struct sdio_func *func,
 			sctrl->slc_blk_sz, err);
 
 		sdio_release_host(func);
-		if (epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT)
-			goto _err_off;
+		goto _err_off;
+	}
 
+	sdio_release_host(func);
+
+#ifdef LOWER_CLK
+	/* fix clock for dongle */
+	sif_set_clock(func, 23);
+#endif				//LOWER_CLK
+
+	err = esp_pub_init_all(epub);
+	if (err) {
+		dev_err(epub->dev, "esp_init_all failed: %d\n", err);
+		err = 0;
+		goto _err_first_init;
+	}
+
+	epub->sdio_state = ESP_SDIO_STATE_FIRST_NORMAL_EXIT;
+	sdio_claim_host(func);
+	mmc_sw_reset(host);
+	sdio_release_host(func);
+	printk("mmc_sw_reset done\n");
+
+	sctrl = sif_sctrl;
+	sif_sctrl = NULL;
+	epub = sctrl->epub;
+	epub->sdio_state = ESP_SDIO_STATE_SECOND_INIT;
+	SET_IEEE80211_DEV(epub->hw, &func->dev);
+	epub->dev = &func->dev;
+	sctrl->func = func;
+	sdio_set_drvdata(func, sctrl);
+	sctrl->id = id;
+	sctrl->off = true;
+
+	/* give us some time to enable, in ms */
+	func->enable_timeout = 100;
+
+	err = esdio_power_on(sctrl);
+	if (err)
+		goto _err_second_init;
+
+	check_target_id(epub);
+
+	sdio_claim_host(func);
+
+	err = sdio_set_block_size(func, sctrl->slc_blk_sz);
+	if (err) {
+		dev_err(epub->dev, "Set sdio block size %d failed: %d)\n",
+			sctrl->slc_blk_sz, err);
+
+		sdio_release_host(func);
 		goto _err_second_init;
 	}
 
@@ -543,21 +581,10 @@ static int esp_sdio_probe(struct sdio_func *func,
 	err = esp_pub_init_all(epub);
 	if (err) {
 		dev_err(epub->dev, "esp_init_all failed: %d\n", err);
-		if (epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT) {
-			err = 0;
-			goto _err_first_init;
-		}
-
-		if (epub->sdio_state == ESP_SDIO_STATE_SECOND_INIT)
-			goto _err_second_init;
+		goto _err_second_init;
 	}
 
-	if (epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT) {
-		epub->sdio_state = ESP_SDIO_STATE_FIRST_NORMAL_EXIT;
-		/* Rescan the esp8089 after loading the initial firmware */
-		mmc_force_detect_change(host, msecs_to_jiffies(100), true);
-	}
-
+	printk("%s: %d err: %d\n", __func__, __LINE__, err);
 	return err;
 
 _err_off:

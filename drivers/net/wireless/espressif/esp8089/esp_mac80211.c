@@ -322,10 +322,10 @@ static bool beacon_tim_alter(struct sk_buff *beacon)
 
 unsigned long init_jiffies;
 unsigned long cycle_beacon_count;
-static void drv_handle_beacon(unsigned long data)
+static void drv_handle_beacon(struct timer_list *t)
 {
-	struct ieee80211_vif *vif = (struct ieee80211_vif *)data;
-	struct esp_vif *evif = (struct esp_vif *)vif->drv_priv;
+	struct esp_vif *evif = from_timer(evif, t, beacon_timer);
+	struct ieee80211_vif *vif = evif->epub->vif;
 	struct sk_buff *beacon;
 	struct sk_buff *skb;
 	bool tim_reach;
@@ -366,7 +366,7 @@ static void init_beacon_timer(struct ieee80211_vif *vif)
 	struct esp_vif *evif = (struct esp_vif *)vif->drv_priv;
 
 	beacon_tim_init();
-	setup_timer(&evif->beacon_timer, drv_handle_beacon, (unsigned long)vif);	//TBD, not init here...
+	timer_setup(&evif->beacon_timer, drv_handle_beacon, 0);	//TBD, not init here...
 	cycle_beacon_count = 1;
 	init_jiffies = jiffies;
 	evif->beacon_timer.expires = init_jiffies +
@@ -666,7 +666,7 @@ static int esp_node_detach(struct ieee80211_hw *hw, u8 ifidx,
 
 struct esp_node *esp_get_node_by_addr(struct esp_pub *epub, const u8 *addr)
 {
-	struct esp_node *node;
+	struct esp_node *node = NULL;
 	int i;
 	u32 map;
 
@@ -698,7 +698,8 @@ struct esp_node *esp_get_node_by_addr(struct esp_pub *epub, const u8 *addr)
 
 int esp_get_empty_rxampdu(struct esp_pub *epub, const u8 *addr, u8 tid)
 {
-	int index;
+	/* FIXME: is it 0 by default? */
+	int index = 0;
 
 	if (!addr)
 		return index;
@@ -966,7 +967,7 @@ static int esp_op_ampdu_action(struct ieee80211_hw *hw,
 	struct esp_tx_tid *tid_info = &node->tid[tid];
 	u16 *ssn = &params->ssn;
 	u8 buf_size = params->buf_size;
-	int ret;
+	int ret = 0;
 
 	switch (action) {
 	case IEEE80211_AMPDU_TX_START:
